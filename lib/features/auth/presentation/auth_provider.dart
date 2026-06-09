@@ -3,12 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../domain/entities/account_entity.dart';
 
 /// TODO: Centralizar el estado de autenticación usando ChangeNotifier.
-enum AuthStatus {
-  initial,
-  loading,
-  authenticated,
-  error,
-}
+enum AuthStatus { initial, loading, authenticated, error }
 
 /// TODO: Exponer el estado de Auth para screens y widgets de la feature.
 class AuthProvider extends ChangeNotifier {
