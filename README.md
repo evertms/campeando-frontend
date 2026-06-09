@@ -1,17 +1,23 @@
-# campeando_frontend
+# Campeando Frontend
 
-A new Flutter project.
+Campeando es una plataforma SaaS multi-tenant para logística y gestión de eventos como campamentos y conferencias.
 
-## Getting Started
+## Estructura
 
-This project is a starting point for a Flutter application.
+El proyecto sigue una arquitectura feature-first en `lib/`, con Clean Architecture interna por feature y un `core/` para capacidades compartidas como API, persistencia, tema y widgets globales.
 
-A few resources to get you started if this is your first Flutter project:
+## Requisitos
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- Flutter SDK instalado
+- Dependencias resueltas con `flutter pub get`
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Ejecutar
+
+1. Instala dependencias:
+	`flutter pub get`
+2. Ejecuta la aplicación:
+	`flutter run`
+
+## Notas
+
+La base está preparada para las features de Auth, Eventos, Inscripciones con OTP y Logística, con aislamiento por Tenant mediante headers o claims.
