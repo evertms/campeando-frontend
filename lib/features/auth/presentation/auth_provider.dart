@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import '../domain/account_entity.dart';
+import '../domain/entities/account_entity.dart';
 
 /// TODO: Centralizar el estado de autenticación usando ChangeNotifier.
 enum AuthStatus {
