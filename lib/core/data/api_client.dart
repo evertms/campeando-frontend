@@ -1,45 +1,54 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:http/http.dart' as http;
+import 'package:campeando_frontend/core/config.dart';
 
-import 'storage_service.dart';
-
-/// TODO: Interceptor simple para enriquecer headers antes de cada request.
-typedef HeaderInterceptor = Future<Map<String, String>> Function(
-  Map<String, String> headers,
-);
-
-/// TODO: Cliente base para requests HTTP con inyección automática de JWT y Tenant.
 class ApiClient {
-  ApiClient({
-    required this.baseUrl,
-    required this.storageService,
-    http.Client? httpClient,
-  }) : _httpClient = httpClient ?? http.Client();
-
-  final String baseUrl;
-  final StorageService storageService;
   final http.Client _httpClient;
 
-  final List<HeaderInterceptor> _interceptors = [];
+  ApiClient({http.Client? httpClient}) : _httpClient = httpClient ?? http.Client();
 
-  /// TODO: Registrar interceptores para modificar headers antes de enviar la petición.
-  void addInterceptor(HeaderInterceptor interceptor) {
-    _interceptors.add(interceptor);
+  Future<dynamic> get(String path) async {
+    final uri = Uri.parse('$baseUrl$path');
+    try {
+      final response = await _httpClient.get(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+      return _handleResponse(response);
+    } on SocketException {
+      throw Exception('No Internet connection');
+    }
   }
 
-  /// TODO: Ejecutar una petición GET con headers base + JWT + Tenant.
-  Future<http.Response> get(
-    String path, {
-    Map<String, String>? headers,
-  }) async {
-    throw UnimplementedError('TODO: implementar GET con headers e interceptores');
+  Future<dynamic> post(String path, {required Map<String, dynamic> body}) async {
+    final uri = Uri.parse('$baseUrl$path');
+    try {
+      final response = await _httpClient.post(
+        uri,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(body),
+      );
+      return _handleResponse(response);
+    } on SocketException {
+      throw Exception('No Internet connection');
+    }
   }
 
-  /// TODO: Ejecutar una petición POST con headers base + JWT + Tenant.
-  Future<http.Response> post(
-    String path, {
-    Map<String, String>? headers,
-    Object? body,
-  }) async {
-    throw UnimplementedError('TODO: implementar POST con headers e interceptores');
+  dynamic _handleResponse(http.Response response) {
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      if (response.body.isEmpty) {
+        return null;
+      }
+      return json.decode(response.body);
+    } else {
+      // You can handle specific error codes here
+      throw Exception('Error ${response.statusCode}: ${response.reasonPhrase}');
+    }
   }
 }
