@@ -5,26 +5,21 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
+import 'package:campeando_frontend/main.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:campeando_frontend/main.dart';
-
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  testWidgets('Smoke test: Verify HomeScreen titles', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(const CampeandoApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify that our titles are present.
+    expect(find.text('Campeando - Demo UI'), findsOneWidget);
+    expect(find.text('Módulos Implementados'), findsOneWidget);
+    
+    // Verify that the menu tiles are present.
+    expect(find.text('Catálogo de Eventos'), findsOneWidget);
+    expect(find.text('Detalle de Evento'), findsOneWidget);
+    expect(find.text('Ingreso (Login)'), findsOneWidget);
   });
 }
