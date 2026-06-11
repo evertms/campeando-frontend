@@ -133,19 +133,37 @@ class _EventCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => EventDetailScreen(eventId: event.id),
-                          ),
-                        );
-                      },
-                      child: const Text('Registrarse'),
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => EventDetailScreen(eventId: event.id),
+                              ),
+                            );
+                          },
+                          child: const Text('Ver detalles'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: () {
+                            // Navegar directo al detalle, el detalle ya tiene el formulario
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => EventDetailScreen(eventId: event.id),
+                              ),
+                            );
+                          },
+                          child: const Text('Registrarse'),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
