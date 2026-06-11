@@ -1,6 +1,14 @@
+import 'package:campeando_frontend/core/data/api_client.dart';
+import 'package:campeando_frontend/features/events/data/datasources/event_remote_datasource.dart';
+import 'package:campeando_frontend/features/events/data/repositories/event_repository_impl.dart';
+import 'package:campeando_frontend/features/events/domain/repositories/event_repository.dart';
+import 'package:campeando_frontend/features/registration/data/datasources/registration_remote_datasource.dart';
+import 'package:campeando_frontend/features/registration/data/repositories/registration_repository_impl.dart';
+import 'package:campeando_frontend/features/registration/domain/repositories/registration_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:provider/single_child_widget.dart';
 
-import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/events/presentation/screens/event_catalog_screen.dart';
 import 'features/events/presentation/screens/event_detail_screen.dart';
 
@@ -9,16 +17,37 @@ class CampeandoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Campeando',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: Colors.blue,
-        brightness: Brightness.light,
+    return MultiProvider(
+      providers: _getProviders(),
+      child: MaterialApp(
+        title: 'Campeando',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          useMaterial3: true,
+          colorSchemeSeed: Colors.blue,
+          brightness: Brightness.light,
+        ),
+        home: const HomeScreen(),
       ),
-      home: const HomeScreen(),
     );
+  }
+
+  List<SingleChildWidget> _getProviders() {
+    // Infrastructure
+    final apiClient = ApiClient();
+
+    // Datasources
+    final eventRemoteDatasource = EventRemoteDatasourceImpl(apiClient: apiClient);
+    final registrationRemoteDatasource = RegistrationRemoteDatasourceImpl(apiClient: apiClient);
+
+    // Repositories
+    final eventRepository = EventRepositoryImpl(remoteDatasource: eventRemoteDatasource);
+    final registrationRepository = RegistrationRepositoryImpl(remoteDatasource: registrationRemoteDatasource);
+
+    return [
+      Provider<EventRepository>.value(value: eventRepository),
+      Provider<RegistrationRepository>.value(value: registrationRepository),
+    ];
   }
 }
 
@@ -54,23 +83,17 @@ class HomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               _MenuTile(
-                title: 'Detalle de Evento',
-                subtitle: 'Vista operativa con SliverAppBar y CTA responsivo.',
+                title: 'Detalle de Evento (WIP)',
+                subtitle: 'Flujo de registro con OTP en desarrollo.',
                 icon: Icons.event_note,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const EventDetailScreen()),
-                ),
-              ),
-              const SizedBox(height: 16),
-              _MenuTile(
-                title: 'Ingreso (Login)',
-                subtitle: 'Formulario con validación y diseño adaptado.',
-                icon: Icons.login,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                ),
+                onTap: () {
+                  // Hardcoded eventId for now, this will come from the catalog later
+                  const String mockEventId = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const EventDetailScreen(eventId: mockEventId)),
+                  );
+                },
               ),
             ],
           ),
@@ -115,3 +138,4 @@ class _MenuTile extends StatelessWidget {
     );
   }
 }
+

@@ -19,7 +19,7 @@ void main() {
     
     // Verify that the menu tiles are present.
     expect(find.text('Catálogo de Eventos'), findsOneWidget);
-    expect(find.text('Detalle de Evento'), findsOneWidget);
-    expect(find.text('Ingreso (Login)'), findsOneWidget);
+    expect(find.text('Detalle de Evento (WIP)'), findsOneWidget);
+    expect(find.text('Ingreso (Login)'), findsNothing);
   });
 }
