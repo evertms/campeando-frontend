@@ -1,64 +1,86 @@
+import 'package:campeando_frontend/features/events/data/models/event_summary_model.dart';
+import 'package:campeando_frontend/features/events/domain/repositories/event_repository.dart';
+import 'package:campeando_frontend/features/events/presentation/screens/event_detail_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class EventCatalogScreen extends StatelessWidget {
+class EventCatalogScreen extends StatefulWidget {
   const EventCatalogScreen({super.key});
 
   @override
+  State<EventCatalogScreen> createState() => _EventCatalogScreenState();
+}
+
+class _EventCatalogScreenState extends State<EventCatalogScreen> {
+  late Future<List<EventSummaryModel>> _eventsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _eventsFuture = context.read<EventRepository>().getAllEvents();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final List<Map<String, String>> mockEvents = List.generate(
-      10,
-      (index) => {
-        'title': 'Evento Deportivo ${index + 1}',
-        'date': '15 de Octubre, 2026',
-        'location': 'Estadio Nacional',
-        'image': 'https://via.placeholder.com/400x200',
-      },
-    );
-
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          const SliverAppBar.medium(
-            title: Text('Catálogo de Eventos'),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.all(16.0),
-            sliver: SliverLayoutBuilder(
-              builder: (context, constraints) {
-                final bool isMobile = constraints.crossAxisExtent < 600;
+      body: FutureBuilder<List<EventSummaryModel>>(
+        future: _eventsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('No hay eventos disponibles'));
+          }
 
-                if (isMobile) {
-                  return SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) => _EventCard(event: mockEvents[index]),
-                      childCount: mockEvents.length,
-                    ),
-                  );
-                } else {
-                  return SliverGrid(
-                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                      maxCrossAxisExtent: 400.0,
-                      mainAxisSpacing: 16.0,
-                      crossAxisSpacing: 16.0,
-                      childAspectRatio: 0.85,
-                    ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) => _EventCard(event: mockEvents[index]),
-                      childCount: mockEvents.length,
-                    ),
-                  );
-                }
-              },
-            ),
-          ),
-        ],
+          final events = snapshot.data!;
+
+          return CustomScrollView(
+            slivers: [
+              const SliverAppBar.medium(
+                title: Text('Catálogo de Eventos'),
+              ),
+              SliverPadding(
+                padding: const EdgeInsets.all(16.0),
+                sliver: SliverLayoutBuilder(
+                  builder: (context, constraints) {
+                    final bool isMobile = constraints.crossAxisExtent < 600;
+
+                    if (isMobile) {
+                      return SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => _EventCard(event: events[index]),
+                          childCount: events.length,
+                        ),
+                      );
+                    } else {
+                      return SliverGrid(
+                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: 400.0,
+                          mainAxisSpacing: 16.0,
+                          crossAxisSpacing: 16.0,
+                          childAspectRatio: 0.85,
+                        ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => _EventCard(event: events[index]),
+                          childCount: events.length,
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 }
 
 class _EventCard extends StatelessWidget {
-  final Map<String, String> event;
+  final EventSummaryModel event;
 
   const _EventCard({required this.event});
 
@@ -71,7 +93,12 @@ class _EventCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16.0),
       child: InkWell(
         onTap: () {
-          // Navegación a detalle (se implementará en main.dart o vía argumentos)
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => EventDetailScreen(eventId: event.id),
+            ),
+          );
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +116,7 @@ class _EventCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    event['title']!,
+                    event.name,
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
@@ -98,20 +125,7 @@ class _EventCard extends StatelessWidget {
                       Icon(Icons.calendar_today, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
                       const SizedBox(width: 8),
                       Text(
-                        event['date']!,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(Icons.location_on, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                      const SizedBox(width: 8),
-                      Text(
-                        event['location']!,
+                        '${event.startDate.day}/${event.startDate.month}/${event.startDate.year}',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Theme.of(context).colorScheme.onSurfaceVariant,
                             ),
