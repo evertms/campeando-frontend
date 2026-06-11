@@ -1,149 +1,150 @@
+import 'package:campeando_frontend/features/events/data/models/event_detail_model.dart';
+import 'package:campeando_frontend/features/events/domain/repositories/event_repository.dart';
+import 'package:campeando_frontend/features/registration/data/models/registration_request_models.dart';
+import 'package:campeando_frontend/features/registration/domain/repositories/registration_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class EventDetailScreen extends StatelessWidget {
-  const EventDetailScreen({super.key});
+class EventDetailScreen extends StatefulWidget {
+  final String eventId;
+  const EventDetailScreen({super.key, required this.eventId});
+
+  @override
+  State<EventDetailScreen> createState() => _EventDetailScreenState();
+}
+
+class _EventDetailScreenState extends State<EventDetailScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _otpController = TextEditingController();
+
+  bool _isOtpSectionVisible = false;
+  bool _isOtpVerified = false;
+  bool _isLoading = false;
+
+  late Future<EventDetailModel> _eventFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _eventFuture = context.read<EventRepository>().getEventById(widget.eventId);
+  }
+
+  Future<void> _requestOtp() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
+    try {
+      await context.read<RegistrationRepository>().requestOtp(
+            eventId: widget.eventId,
+            request: RequestOtpRequest(
+              email: _emailController.text,
+              fullName: _nameController.text,
+            ),
+          );
+      setState(() {
+        _isOtpSectionVisible = true;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
+  Future<void> _verifyOtp() async {
+    setState(() => _isLoading = true);
+    final verified = await context.read<RegistrationRepository>().verifyOtp(
+          eventId: widget.eventId,
+          request: VerifyOtpRequest(
+            email: _emailController.text,
+            otp: _otpController.text,
+          ),
+        );
+    setState(() {
+      _isLoading = false;
+      if (verified) {
+        _isOtpVerified = true;
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('OTP incorrecto')));
+      }
+    });
+  }
+
+  Future<void> _submitRegistration() async {
+    setState(() => _isLoading = true);
+    try {
+      await context.read<RegistrationRepository>().submitRegistration(
+            eventId: widget.eventId,
+            request: SubmitRegistrationRequest(
+              email: _emailController.text,
+              fullName: _nameController.text,
+              phone: _phoneController.text,
+            ),
+          );
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Registro exitoso')));
+      Navigator.pop(context);
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar.large(
-            title: const Text('Detalle del Evento'),
-            expandedHeight: 300,
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                child: Center(
-                  child: Icon(
-                    Icons.event,
-                    size: 80,
-                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+      body: FutureBuilder<EventDetailModel>(
+        future: _eventFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) return Center(child: Text('Error: ${snapshot.error}'));
+          final event = snapshot.data!;
+
+          return CustomScrollView(
+            slivers: [
+              SliverAppBar.large(title: Text(event.name)),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text('Capacidad: ${event.maxCapacity}', style: Theme.of(context).textTheme.bodyLarge),
+                        const SizedBox(height: 16),
+                        TextFormField(controller: _nameController, decoration: const InputDecoration(labelText: 'Nombre completo'), validator: (v) => v!.isEmpty ? 'Requerido' : null),
+                        const SizedBox(height: 8),
+                        TextFormField(controller: _emailController, decoration: const InputDecoration(labelText: 'Email'), validator: (v) => v!.isEmpty ? 'Requerido' : null),
+                        const SizedBox(height: 8),
+                        TextFormField(controller: _phoneController, decoration: const InputDecoration(labelText: 'Teléfono'), validator: (v) => v!.isEmpty ? 'Requerido' : null),
+                        const SizedBox(height: 24),
+                        if (!_isOtpVerified) ...[
+                          if (!_isOtpSectionVisible)
+                            FilledButton(onPressed: _isLoading ? null : _requestOtp, child: const Text('Solicitar OTP')),
+                          if (_isOtpSectionVisible)
+                            Row(children: [
+                              Expanded(child: TextFormField(controller: _otpController, decoration: const InputDecoration(labelText: 'OTP'))),
+                              const SizedBox(width: 8),
+                              FilledButton(onPressed: _isLoading ? null : _verifyOtp, child: const Text('Verificar')),
+                            ]),
+                        ] else
+                          const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.check_circle, color: Colors.green), SizedBox(width: 8), Text('OTP Verificado')]),
+                        const SizedBox(height: 24),
+                        FilledButton(onPressed: (_isOtpVerified && !_isLoading) ? _submitRegistration : null, child: const Text('Registrarse')),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final bool isDesktop = constraints.maxWidth > 800;
-                
-                final content = Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Gran Maratón de Verano 2026',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 16),
-                      _InfoRow(icon: Icons.calendar_month, text: 'Domingo, 15 de Octubre de 2026'),
-                      const SizedBox(height: 8),
-                      _InfoRow(icon: Icons.access_time, text: '07:00 AM - 12:00 PM'),
-                      const SizedBox(height: 8),
-                      _InfoRow(icon: Icons.location_on, text: 'Parque Central, Ciudad Principal'),
-                      const SizedBox(height: 8),
-                      _InfoRow(icon: Icons.people, text: 'Capacidad máxima: 500 personas'),
-                      const SizedBox(height: 24),
-                      Text(
-                        'Descripción',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Acompañanos en la edición anual de la Gran Maratón de Verano. Este evento busca promover la salud y el bienestar en nuestra comunidad. Habrá categorías para todas las edades y niveles de experiencia.',
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                      const SizedBox(height: 40),
-                      if (!isDesktop) _buildCTA(context),
-                    ],
-                  ),
-                );
-
-                if (isDesktop) {
-                  return Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1000),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(flex: 3, child: content),
-                          Expanded(
-                            flex: 2,
-                            child: Padding(
-                              padding: const EdgeInsets.all(24.0),
-                              child: Card(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(24.0),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        'Inscripciones',
-                                        style: Theme.of(context).textTheme.titleMedium,
-                                      ),
-                                      const SizedBox(height: 16),
-                                      const Text(
-                                        'Las inscripciones aún no están abiertas para este evento.',
-                                        textAlign: TextAlign.center,
-                                      ),
-                                      const SizedBox(height: 24),
-                                      _buildCTA(context, isFullWidth: true),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                return content;
-              },
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
-    );
-  }
-
-  Widget _buildCTA(BuildContext context, {bool isFullWidth = false}) {
-    final button = FilledButton(
-      onPressed: null, // Deshabilitado por ahora
-      child: const Text('Registrarse Ahora'),
-    );
-
-    if (isFullWidth) {
-      return SizedBox(width: double.infinity, child: button);
-    }
-    return button;
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _InfoRow({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            text,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-        ),
-      ],
     );
   }
 }
