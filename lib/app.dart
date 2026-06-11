@@ -2,6 +2,7 @@ import 'package:campeando_frontend/core/data/api_client.dart';
 import 'package:campeando_frontend/features/events/data/datasources/event_remote_datasource.dart';
 import 'package:campeando_frontend/features/events/data/repositories/event_repository_impl.dart';
 import 'package:campeando_frontend/features/events/domain/repositories/event_repository.dart';
+import 'package:campeando_frontend/features/events/presentation/screens/event_info_screen.dart';
 import 'package:campeando_frontend/features/registration/data/datasources/registration_remote_datasource.dart';
 import 'package:campeando_frontend/features/registration/data/repositories/registration_repository_impl.dart';
 import 'package:campeando_frontend/features/registration/domain/repositories/registration_repository.dart';
@@ -10,7 +11,6 @@ import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
 import 'features/events/presentation/screens/event_catalog_screen.dart';
-import 'features/events/presentation/screens/event_detail_screen.dart';
 
 class CampeandoApp extends StatelessWidget {
   const CampeandoApp({super.key});
@@ -37,12 +37,20 @@ class CampeandoApp extends StatelessWidget {
     final apiClient = ApiClient();
 
     // Datasources
-    final eventRemoteDatasource = EventRemoteDatasourceImpl(apiClient: apiClient);
-    final registrationRemoteDatasource = RegistrationRemoteDatasourceImpl(apiClient: apiClient);
+    final eventRemoteDatasource = EventRemoteDatasourceImpl(
+      apiClient: apiClient,
+    );
+    final registrationRemoteDatasource = RegistrationRemoteDatasourceImpl(
+      apiClient: apiClient,
+    );
 
     // Repositories
-    final eventRepository = EventRepositoryImpl(remoteDatasource: eventRemoteDatasource);
-    final registrationRepository = RegistrationRepositoryImpl(remoteDatasource: registrationRemoteDatasource);
+    final eventRepository = EventRepositoryImpl(
+      remoteDatasource: eventRemoteDatasource,
+    );
+    final registrationRepository = RegistrationRepositoryImpl(
+      remoteDatasource: registrationRemoteDatasource,
+    );
 
     return [
       Provider<EventRepository>.value(value: eventRepository),
@@ -57,9 +65,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Campeando - Demo UI'),
-      ),
+      appBar: AppBar(title: const Text('Campeando - Demo UI')),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
@@ -88,10 +94,14 @@ class HomeScreen extends StatelessWidget {
                 icon: Icons.event_note,
                 onTap: () {
                   // Hardcoded eventId for now, this will come from the catalog later
-                  const String mockEventId = "3fa85f64-5717-4562-b3fc-2c963f66afa6";
+                  const String mockEventId =
+                      "3fa85f64-5717-4562-b3fc-2c963f66afa6";
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const EventDetailScreen(eventId: mockEventId)),
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const EventInfoScreen(eventId: mockEventId),
+                    ),
                   );
                 },
               ),
@@ -125,7 +135,10 @@ class _MenuTile extends StatelessWidget {
         side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 12,
+        ),
         leading: CircleAvatar(
           backgroundColor: Theme.of(context).colorScheme.primaryContainer,
           child: Icon(icon, color: Theme.of(context).colorScheme.primary),
@@ -138,4 +151,3 @@ class _MenuTile extends StatelessWidget {
     );
   }
 }
-

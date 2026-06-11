@@ -50,17 +50,19 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
         _isOtpSectionVisible = true;
         _isRequestingOtp = false;
       });
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('OTP enviado a tu email')));
     } catch (e) {
       setState(() => _isRequestingOtp = false);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
   Future<void> _verifyOtp() async {
     if (_otpController.text.length != 6) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('El OTP debe tener 6 dígitos')));
-        return;
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('El OTP debe tener 6 dígitos')));
+      return;
     }
     setState(() => _isVerifyingOtp = true);
     final verified = await context.read<RegistrationRepository>().verifyOtp(
@@ -75,6 +77,7 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
       if (verified) {
         _isOtpVerified = true;
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('OTP incorrecto'), backgroundColor: Colors.red));
       }
     });
@@ -92,10 +95,13 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
             ),
           );
       setState(() => _isLoading = false);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Registro exitoso')));
+      if (!mounted) return;
       Navigator.pop(context);
     } catch (e) {
       setState(() => _isLoading = false);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }

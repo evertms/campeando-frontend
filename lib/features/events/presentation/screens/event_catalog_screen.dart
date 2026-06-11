@@ -1,6 +1,7 @@
 import 'package:campeando_frontend/features/events/data/models/event_summary_model.dart';
 import 'package:campeando_frontend/features/events/domain/repositories/event_repository.dart';
-import 'package:campeando_frontend/features/events/presentation/screens/event_detail_screen.dart';
+import 'package:campeando_frontend/features/events/presentation/screens/event_info_screen.dart';
+import 'package:campeando_frontend/features/events/presentation/screens/event_registration_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -60,7 +61,7 @@ class _EventCatalogScreenState extends State<EventCatalogScreen> {
                           maxCrossAxisExtent: 400.0,
                           mainAxisSpacing: 16.0,
                           crossAxisSpacing: 16.0,
-                          childAspectRatio: 0.85,
+                          childAspectRatio: 0.9,
                         ),
                         delegate: SliverChildBuilderDelegate(
                           (context, index) => _EventCard(event: events[index]),
@@ -91,85 +92,74 @@ class _EventCard extends StatelessWidget {
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
       clipBehavior: Clip.antiAlias,
       margin: const EdgeInsets.only(bottom: 16.0),
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => EventDetailScreen(eventId: event.id),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AspectRatio(
+            aspectRatio: 16 / 9,
+            child: Container(
+              color: Theme.of(context).colorScheme.primaryContainer,
+              child: const Icon(Icons.image, size: 48),
             ),
-          );
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
-              aspectRatio: 16 / 9,
-              child: Container(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                child: const Icon(Icons.image, size: 48),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    event.name,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(Icons.calendar_today, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${event.startDate.day}/${event.startDate.month}/${event.startDate.year}',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  event.name,
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.calendar_today, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${event.startDate.day}/${event.startDate.month}/${event.startDate.year}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => EventInfoScreen(eventId: event.id),
                             ),
+                          );
+                        },
+                        child: const Text('Ver detalles'),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => EventDetailScreen(eventId: event.id),
-                              ),
-                            );
-                          },
-                          child: const Text('Ver detalles'),
-                        ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => EventRegistrationScreen(eventId: event.id),
+                            ),
+                          );
+                        },
+                        child: const Text('Registrarse'),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: () {
-                            // Navegar directo al detalle, el detalle ya tiene el formulario
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => EventDetailScreen(eventId: event.id),
-                              ),
-                            );
-                          },
-                          child: const Text('Registrarse'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
