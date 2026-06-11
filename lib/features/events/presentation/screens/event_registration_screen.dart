@@ -3,17 +3,18 @@ import 'package:campeando_frontend/features/events/domain/repositories/event_rep
 import 'package:campeando_frontend/features/registration/data/models/registration_request_models.dart';
 import 'package:campeando_frontend/features/registration/domain/repositories/registration_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
-class EventDetailScreen extends StatefulWidget {
+class EventRegistrationScreen extends StatefulWidget {
   final String eventId;
-  const EventDetailScreen({super.key, required this.eventId});
+  const EventRegistrationScreen({super.key, required this.eventId});
 
   @override
-  State<EventDetailScreen> createState() => _EventDetailScreenState();
+  State<EventRegistrationScreen> createState() => _EventRegistrationScreenState();
 }
 
-class _EventDetailScreenState extends State<EventDetailScreen> {
+class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -23,6 +24,8 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
   bool _isOtpSectionVisible = false;
   bool _isOtpVerified = false;
   bool _isLoading = false;
+  bool _isRequestingOtp = false;
+  bool _isVerifyingOtp = false;
 
   late Future<EventDetailModel> _eventFuture;
 
@@ -34,7 +37,7 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
 
   Future<void> _requestOtp() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _isLoading = true);
+    setState(() => _isRequestingOtp = true);
     try {
       await context.read<RegistrationRepository>().requestOtp(
             eventId: widget.eventId,
@@ -45,16 +48,21 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           );
       setState(() {
         _isOtpSectionVisible = true;
-        _isLoading = false;
+        _isRequestingOtp = false;
       });
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('OTP enviado a tu email')));
     } catch (e) {
-      setState(() => _isLoading = false);
+      setState(() => _isRequestingOtp = false);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
   Future<void> _verifyOtp() async {
-    setState(() => _isLoading = true);
+    if (_otpController.text.length != 6) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('El OTP debe tener 6 dígitos')));
+        return;
+    }
+    setState(() => _isVerifyingOtp = true);
     final verified = await context.read<RegistrationRepository>().verifyOtp(
           eventId: widget.eventId,
           request: VerifyOtpRequest(
@@ -63,11 +71,11 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
           ),
         );
     setState(() {
-      _isLoading = false;
+      _isVerifyingOtp = false;
       if (verified) {
         _isOtpVerified = true;
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('OTP incorrecto')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('OTP incorrecto'), backgroundColor: Colors.red));
       }
     });
   }
@@ -115,27 +123,32 @@ class _EventDetailScreenState extends State<EventDetailScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text('Capacidad: ${event.maxCapacity}', style: Theme.of(context).textTheme.bodyLarge),
-                        const SizedBox(height: 16),
-                        TextFormField(controller: _nameController, decoration: const InputDecoration(labelText: 'Nombre completo'), validator: (v) => v!.isEmpty ? 'Requerido' : null),
-                        const SizedBox(height: 8),
-                        TextFormField(controller: _emailController, decoration: const InputDecoration(labelText: 'Email'), validator: (v) => v!.isEmpty ? 'Requerido' : null),
-                        const SizedBox(height: 8),
-                        TextFormField(controller: _phoneController, decoration: const InputDecoration(labelText: 'Teléfono'), validator: (v) => v!.isEmpty ? 'Requerido' : null),
+                        Text('Capacidad máxima: ${event.maxCapacity}', style: Theme.of(context).textTheme.titleMedium),
                         const SizedBox(height: 24),
+                        TextFormField(controller: _nameController, decoration: const InputDecoration(labelText: 'Nombre completo', border: OutlineInputBorder()), validator: (v) => v!.isEmpty ? 'Requerido' : null),
+                        const SizedBox(height: 16),
+                        TextFormField(controller: _emailController, decoration: const InputDecoration(labelText: 'Email', border: OutlineInputBorder()), validator: (v) => v!.isEmpty ? 'Requerido' : null),
+                        const SizedBox(height: 16),
+                        TextFormField(controller: _phoneController, decoration: const InputDecoration(labelText: 'Teléfono', border: OutlineInputBorder()), validator: (v) => v!.isEmpty ? 'Requerido' : null),
+                        const SizedBox(height: 24),
+                        
+                        // OTP Section
                         if (!_isOtpVerified) ...[
                           if (!_isOtpSectionVisible)
-                            FilledButton(onPressed: _isLoading ? null : _requestOtp, child: const Text('Solicitar OTP')),
+                            FilledButton.tonal(onPressed: _isRequestingOtp ? null : _requestOtp, child: _isRequestingOtp ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator()) : const Text('Solicitar código de validación')),
                           if (_isOtpSectionVisible)
                             Row(children: [
-                              Expanded(child: TextFormField(controller: _otpController, decoration: const InputDecoration(labelText: 'OTP'))),
-                              const SizedBox(width: 8),
-                              FilledButton(onPressed: _isLoading ? null : _verifyOtp, child: const Text('Verificar')),
+                              Expanded(child: TextFormField(controller: _otpController, keyboardType: TextInputType.number, inputFormatters: [FilteringTextInputFormatter.digitsOnly], maxLength: 6, decoration: const InputDecoration(labelText: 'Código OTP', border: OutlineInputBorder()))),
+                              const SizedBox(width: 16),
+                              FilledButton(onPressed: _isVerifyingOtp ? null : _verifyOtp, child: _isVerifyingOtp ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white)) : const Text('Verificar')),
                             ]),
                         ] else
-                          const Row(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.check_circle, color: Colors.green), SizedBox(width: 8), Text('OTP Verificado')]),
-                        const SizedBox(height: 24),
-                        FilledButton(onPressed: (_isOtpVerified && !_isLoading) ? _submitRegistration : null, child: const Text('Registrarse')),
+                          const ListTile(leading: Icon(Icons.check_circle, color: Colors.green, size: 40), title: Text('¡Validación exitosa!', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))),
+                        
+                        const SizedBox(height: 32),
+                        
+                        // Final Registration Button
+                        FilledButton(onPressed: (_isOtpVerified && !_isLoading) ? _submitRegistration : null, child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Registrarse en el evento')),
                       ],
                     ),
                   ),
