@@ -1,25 +1,22 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:campeando_frontend/app.dart';
+import 'package:campeando_frontend/core/data/storage_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('Smoke test: Verify HomeScreen titles', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const CampeandoApp());
+  testWidgets('Smoke test: Verify App load', (WidgetTester tester) async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+    final storageService = StorageService(prefs);
 
-    // Verify that our titles are present.
-    expect(find.text('Campeando - Demo UI'), findsOneWidget);
-    expect(find.text('Módulos Implementados'), findsOneWidget);
-    
-    // Verify that the menu tiles are present.
+    // Build our app and trigger a frame.
+    await tester.pumpWidget(CampeandoApp(storageService: storageService));
+
+    // Since we now use go_router, the initial screen might be different
+    // or take time to load (FutureBuilder in router).
+    await tester.pumpAndSettle();
+
+    // Verify that we are on some screen (e.g. catalog if not logged in)
     expect(find.text('Catálogo de Eventos'), findsOneWidget);
-    expect(find.text('Detalle de Evento (WIP)'), findsOneWidget);
-    expect(find.text('Ingreso (Login)'), findsNothing);
   });
 }

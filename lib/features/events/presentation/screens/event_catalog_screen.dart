@@ -39,9 +39,7 @@ class _EventCatalogScreenState extends State<EventCatalogScreen> {
 
           return CustomScrollView(
             slivers: [
-              const SliverAppBar.medium(
-                title: Text('Catálogo de Eventos'),
-              ),
+              const SliverAppBar.medium(title: Text('Catálogo de Eventos')),
               SliverPadding(
                 padding: const EdgeInsets.all(16.0),
                 sliver: SliverLayoutBuilder(
@@ -57,12 +55,13 @@ class _EventCatalogScreenState extends State<EventCatalogScreen> {
                       );
                     } else {
                       return SliverGrid(
-                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 400.0,
-                          mainAxisSpacing: 16.0,
-                          crossAxisSpacing: 16.0,
-                          childAspectRatio: 0.9,
-                        ),
+                        gridDelegate:
+                            const SliverGridDelegateWithMaxCrossAxisExtent(
+                              maxCrossAxisExtent: 400.0,
+                              mainAxisSpacing: 16.0,
+                              crossAxisSpacing: 16.0,
+                              childAspectRatio: 0.9,
+                            ),
                         delegate: SliverChildBuilderDelegate(
                           (context, index) => _EventCard(event: events[index]),
                           childCount: events.length,
@@ -107,20 +106,21 @@ class _EventCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  event.name,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+                Text(event.name, style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(Icons.calendar_today, size: 16, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                    Icon(
+                      Icons.calendar_today,
+                      size: 16,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       '${event.startDate.day}/${event.startDate.month}/${event.startDate.year}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -133,7 +133,8 @@ class _EventCard extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => EventInfoScreen(eventId: event.id),
+                              builder: (_) =>
+                                  EventInfoScreen(eventId: event.id),
                             ),
                           );
                         },
@@ -147,7 +148,8 @@ class _EventCard extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => EventRegistrationScreen(eventId: event.id),
+                              builder: (_) =>
+                                  EventRegistrationScreen(eventId: event.id),
                             ),
                           );
                         },

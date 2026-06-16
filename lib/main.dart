@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
-import 'app.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
-  runApp(const CampeandoApp());
+import 'app.dart';
+import 'core/data/storage_service.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  final storageService = StorageService(prefs);
+
+  runApp(CampeandoApp(storageService: storageService));
 }

@@ -2,29 +2,36 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:campeando_frontend/core/config.dart';
+import 'package:campeando_frontend/core/data/storage_service.dart';
 import 'package:http/http.dart' as http;
 
 class ApiClient {
   final http.Client _httpClient;
+  final StorageService? _storageService;
 
-  // TODO: Pega aquí tu token JWT para pruebas. ¡No subir esto a git!
-  static const String _hardcodedToken =
-      "yJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0OTUyODY0Ni01YWUxLTQ2Y2QtYjg3MS00NDc2ZGI3YTE0NWEiLCJlbWFpbCI6ImFkbWluQGRlbW8uY29tIiwianRpIjoiYWZiOTY3NmYtMDc0ZC00NmE5LTk1MWQtZjgxZTJjMmE3MTM2IiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW4iLCJ0ZW5hbnRfaWQiOiI4NGYyZDhhMy0xNzQ5LTRhNjgtOGU1Yi04ZTA0MzllMjUxNDQiLCJleHAiOjE3ODEyMDA4OTIsImlzcyI6Imdlc3Rvci1ldmVudG9zIiwiYXVkIjoiZ2VzdG9yLWV2ZW50b3MtY2xpZW50cyJ9.qZTNrnui1YfMJyRkGuRcL5JP-ydUGBvQ9aEMZjO94J8";
-
-  ApiClient({http.Client? httpClient})
+  ApiClient({http.Client? httpClient, this._storageService})
     : _httpClient = httpClient ?? http.Client();
 
-  Map<String, String> _getHeaders() {
-    return {
+  Future<Map<String, String>> _getHeaders() async {
+    final headers = {
       'Content-Type': 'application/json',
-      'Authorization': 'Bearer $_hardcodedToken',
     };
+
+    if (_storageService != null) {
+      final token = await _storageService.getToken();
+      if (token != null) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+    }
+
+    return headers;
   }
 
   Future<dynamic> get(String path) async {
     final uri = Uri.parse('$baseUrl$path');
     try {
-      final response = await _httpClient.get(uri, headers: _getHeaders());
+      final headers = await _getHeaders();
+      final response = await _httpClient.get(uri, headers: headers);
       return _handleResponse(response);
     } on SocketException {
       throw Exception('No Internet connection');
@@ -37,9 +44,10 @@ class ApiClient {
   }) async {
     final uri = Uri.parse('$baseUrl$path');
     try {
+      final headers = await _getHeaders();
       final response = await _httpClient.post(
         uri,
-        headers: _getHeaders(),
+        headers: headers,
         body: json.encode(body),
       );
       return _handleResponse(response);
@@ -55,7 +63,6 @@ class ApiClient {
       }
       return json.decode(response.body);
     } else {
-      // You can handle specific error codes here
       throw Exception('Error ${response.statusCode}: ${response.reasonPhrase}');
     }
   }

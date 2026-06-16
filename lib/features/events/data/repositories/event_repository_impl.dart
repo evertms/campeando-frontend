@@ -17,4 +17,21 @@ class EventRepositoryImpl implements EventRepository {
   Future<EventDetailModel> getEventById(String id) {
     return remoteDatasource.getEventById(id);
   }
+
+  @override
+  Future<void> createEvent({
+    required String name,
+    required DateTime startDate,
+    required DateTime endDate,
+    required int maxCapacity,
+    required String organizationId,
+  }) {
+    return remoteDatasource.createEvent(
+      name: name,
+      startDate: startDate,
+      endDate: endDate,
+      maxCapacity: maxCapacity,
+      organizationId: organizationId,
+    );
+  }
 }
