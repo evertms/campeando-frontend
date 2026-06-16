@@ -26,7 +26,8 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> _init() async {
     _token = await _storageService.getToken();
-    _organizationId = await _storageService.getTenant();
+    final rawOrgId = await _storageService.getTenant();
+    _organizationId = _cleanId(rawOrgId);
 
     if (_token != null && !JwtDecoder.isExpired(_token!)) {
       _status = AuthStatus.authenticated;
@@ -36,6 +37,11 @@ class AuthProvider extends ChangeNotifier {
       await _storageService.setToken(null);
     }
     notifyListeners();
+  }
+
+  String? _cleanId(String? id) {
+    if (id == null) return null;
+    return id.replaceAll('"', '').trim();
   }
 
   Future<void> login(String email, String password) async {
@@ -48,7 +54,9 @@ class AuthProvider extends ChangeNotifier {
 
       // Extract organizationId (tenant_id) from JWT if available
       final decodedToken = JwtDecoder.decode(_token!);
-      _organizationId = decodedToken['tenant_id'] as String?;
+      final rawOrgId = decodedToken['tenant_id'] as String?;
+      _organizationId = _cleanId(rawOrgId);
+
       if (_organizationId != null) {
         await _storageService.setTenant(_organizationId);
       }
@@ -76,8 +84,9 @@ class AuthProvider extends ChangeNotifier {
   }
 
   Future<void> selectOrganization(String id) async {
-    _organizationId = id;
-    await _storageService.setTenant(id);
+    final cleanedId = _cleanId(id);
+    _organizationId = cleanedId;
+    await _storageService.setTenant(cleanedId);
     notifyListeners();
   }
 }

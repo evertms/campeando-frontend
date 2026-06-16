@@ -90,10 +90,16 @@ class AppRouter {
           return '/';
         }
 
-        // Mandatory organization selection
-        if (authProvider.organizationId == null &&
-            state.matchedLocation != '/organization-selector' &&
-            state.matchedLocation != '/create-organization') {
+        final isSelectingOrg = state.matchedLocation == '/organization-selector' ||
+            state.matchedLocation == '/create-organization';
+
+        // If has org and is in selection, go to home
+        if (authProvider.organizationId != null && isSelectingOrg) {
+          return '/';
+        }
+
+        // Mandatory organization selection if NOT at selection screens
+        if (authProvider.organizationId == null && !isSelectingOrg) {
           return '/organization-selector';
         }
       }

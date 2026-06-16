@@ -19,7 +19,14 @@ class _OrganizationSelectorScreenState
   @override
   void initState() {
     super.initState();
-    _orgsFuture = context.read<OrganizationRepository>().getAllOrganizations();
+    _refresh();
+  }
+
+  void _refresh() {
+    setState(() {
+      _orgsFuture =
+          context.read<OrganizationRepository>().getAllOrganizations();
+    });
   }
 
   @override
@@ -28,6 +35,10 @@ class _OrganizationSelectorScreenState
       appBar: AppBar(
         title: const Text('Seleccionar Organización'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _refresh,
+          ),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => context.read<AuthProvider>().logout(),
@@ -63,7 +74,10 @@ class _OrganizationSelectorScreenState
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/create-organization'),
+        onPressed: () async {
+          await context.push('/create-organization');
+          _refresh();
+        },
         label: const Text('Nueva Organización'),
         icon: const Icon(Icons.add),
       ),
@@ -78,7 +92,10 @@ class _OrganizationSelectorScreenState
           const Text('No perteneces a ninguna organización todavía.'),
           const SizedBox(height: 16),
           FilledButton(
-            onPressed: () => context.push('/create-organization'),
+            onPressed: () async {
+              await context.push('/create-organization');
+              _refresh();
+            },
             child: const Text('Crear mi primera organización'),
           ),
         ],
