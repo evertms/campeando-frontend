@@ -105,6 +105,8 @@ class _OrganizationSelectorScreenState
 
   void _selectOrg(String id) async {
     await context.read<AuthProvider>().selectOrganization(id);
-    // GoRouter will handle redirection to dashboard
+    if (mounted) {
+      context.go('/');
+    }
   }
 }

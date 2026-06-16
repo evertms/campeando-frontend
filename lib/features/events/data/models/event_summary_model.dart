@@ -15,11 +15,11 @@ class EventSummaryModel {
 
   factory EventSummaryModel.fromJson(Map<String, dynamic> json) {
     return EventSummaryModel(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      startDate: DateTime.parse(json['startDate'] as String),
-      endDate: DateTime.parse(json['endDate'] as String),
-      organizationId: json['organizationId'] as String?,
+      id: (json['id'] ?? '') as String,
+      name: (json['name'] ?? 'Sin nombre') as String,
+      startDate: DateTime.parse((json['startDate'] ?? DateTime.now().toIso8601String()) as String),
+      endDate: DateTime.parse((json['endDate'] ?? DateTime.now().toIso8601String()) as String),
+      organizationId: (json['organizationId'] ?? json['tenantId'] ?? json['tenant_id']) as String?,
     );
   }
 }

@@ -28,11 +28,18 @@ class _OrganizationDashboardScreenState
     final auth = context.read<AuthProvider>();
 
     final events = await eventRepo.getAllEvents();
-    final orgId = auth.organizationId;
+    final currentOrgId = auth.organizationId;
 
-    // Filter by organization if needed (assuming API might return all)
-    // and sort by startDate (closest first)
-    final filteredEvents = events.where((e) => e.organizationId == orgId).toList();
+    // Filter by organization:
+    // 1. If the event has an organizationId, it MUST match.
+    // 2. If it doesn't have one, we assume the backend already filtered it via X-Tenant-Id header.
+    final filteredEvents = events.where((e) {
+      if (e.organizationId == null || e.organizationId!.isEmpty) {
+        return true; 
+      }
+      return e.organizationId == currentOrgId;
+    }).toList();
+
     filteredEvents.sort((a, b) => a.startDate.compareTo(b.startDate));
 
     return filteredEvents;

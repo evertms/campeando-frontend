@@ -22,6 +22,13 @@ class ApiClient {
       if (token != null) {
         headers['Authorization'] = 'Bearer $token';
       }
+
+      final tenantId = await _storageService.getTenant();
+      if (tenantId != null) {
+        // Clean any potential quotes like the ones mentioned by the user
+        final cleanTenantId = tenantId.replaceAll('"', '').trim();
+        headers['X-Tenant-Id'] = cleanTenantId;
+      }
     }
 
     return headers;
