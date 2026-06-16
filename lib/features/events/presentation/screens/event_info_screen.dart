@@ -32,30 +32,36 @@ class _EventInfoScreenState extends State<EventInfoScreen> {
           if (snapshot.hasError) {
             return Scaffold(
               appBar: AppBar(),
-              body: Center(child: Text('Error al cargar el evento: ${snapshot.error}')),
+              body: Center(
+                child: Text('Error al cargar el evento: ${snapshot.error}'),
+              ),
             );
           }
           final event = snapshot.data!;
 
           return CustomScrollView(
             slivers: [
-              SliverAppBar.large(
-                title: Text(event.name),
-              ),
+              SliverAppBar.large(title: Text(event.name)),
               SliverList(
-                delegate: SliverChildListDelegate(
-                  [
-                    _InfoTile(icon: Icons.calendar_today, title: 'Fecha de inicio', subtitle: '${event.startDate.day}/${event.startDate.month}/${event.startDate.year}'),
-                    _InfoTile(icon: Icons.calendar_today_outlined, title: 'Fecha de fin', subtitle: '${event.endDate.day}/${event.endDate.month}/${event.endDate.year}'),
-                    _InfoTile(icon: Icons.people, title: 'Capacidad máxima', subtitle: '${event.maxCapacity} personas'),
-                    const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text(
-                        "Aquí iría una descripción más detallada del evento si la API la proveyera. Por ahora, mostramos los datos clave disponibles.",
-                      ),
-                    )
-                  ],
-                ),
+                delegate: SliverChildListDelegate([
+                  _InfoTile(
+                    icon: Icons.calendar_today,
+                    title: 'Fecha de inicio',
+                    subtitle:
+                        '${event.startDate.day}/${event.startDate.month}/${event.startDate.year}',
+                  ),
+                  _InfoTile(
+                    icon: Icons.calendar_today_outlined,
+                    title: 'Fecha de fin',
+                    subtitle:
+                        '${event.endDate.day}/${event.endDate.month}/${event.endDate.year}',
+                  ),
+                  _InfoTile(
+                    icon: Icons.people,
+                    title: 'Capacidad máxima',
+                    subtitle: '${event.maxCapacity} personas',
+                  ),
+                ]),
               ),
             ],
           );
@@ -70,7 +76,11 @@ class _InfoTile extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  const _InfoTile({required this.icon, required this.title, required this.subtitle});
+  const _InfoTile({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
 
   @override
   Widget build(BuildContext context) {
