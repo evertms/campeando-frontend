@@ -80,31 +80,32 @@ class AppRouter {
     ],
     redirect: (context, state) {
       if (authProvider.status == AuthStatus.initial) {
-        return null; // Stay on current path or show nothing while initializing
+        return null;
       }
 
-      final loggingIn =
-          state.matchedLocation == '/login' ||
-          state.matchedLocation == '/register';
-      final isPublicRoute = state.matchedLocation.startsWith('/events');
+      final location = state.matchedLocation;
+      final loggingIn = location == '/login' || location == '/register';
+      final isPublicRoute = location.startsWith('/events');
 
-      if (authProvider.status == AuthStatus.unauthenticated) {
-        if (loggingIn || isPublicRoute) {
-          return null;
+      // 1. Allow everyone to access public routes or login/register
+      if (loggingIn || isPublicRoute) {
+        // If already logged in and trying to go to login/register, go to home
+        if (authProvider.status == AuthStatus.authenticated && loggingIn) {
+          return '/';
         }
+        return null;
+      }
+
+      // 2. If not logged in and not a public route, go to login
+      if (authProvider.status == AuthStatus.unauthenticated) {
         return '/login';
       }
 
+      // 3. If logged in but no organization, force selection (except if already there)
       if (authProvider.status == AuthStatus.authenticated) {
-        if (loggingIn) {
-          return '/';
-        }
+        final isSelectingOrg = location == '/organization-selector' ||
+            location == '/create-organization';
 
-        final isSelectingOrg =
-            state.matchedLocation == '/organization-selector' ||
-            state.matchedLocation == '/create-organization';
-
-        // Mandatory organization selection if NOT at selection screens
         if (authProvider.organizationId == null && !isSelectingOrg) {
           return '/organization-selector';
         }
