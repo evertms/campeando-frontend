@@ -34,7 +34,8 @@ class AuthProvider extends ChangeNotifier {
     } else {
       _status = AuthStatus.unauthenticated;
       _token = null;
-      await _storageService.setToken(null);
+      _organizationId = null;
+      await _storageService.clear();
     }
     notifyListeners();
   }

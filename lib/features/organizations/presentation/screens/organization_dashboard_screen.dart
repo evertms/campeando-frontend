@@ -15,14 +15,7 @@ class OrganizationDashboardScreen extends StatefulWidget {
 
 class _OrganizationDashboardScreenState
     extends State<OrganizationDashboardScreen> {
-  late Future<List<EventSummaryModel>> _eventsFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _eventsFuture = _loadEvents();
-  }
-
+  
   Future<List<EventSummaryModel>> _loadEvents() async {
     final eventRepo = context.read<EventRepository>();
     final auth = context.read<AuthProvider>();
@@ -47,6 +40,9 @@ class _OrganizationDashboardScreenState
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthProvider>();
+    final orgId = authProvider.organizationId;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mis Eventos'),
@@ -62,7 +58,8 @@ class _OrganizationDashboardScreenState
         ],
       ),
       body: FutureBuilder<List<EventSummaryModel>>(
-        future: _eventsFuture,
+        key: ValueKey(orgId), // Force re-fetch when organizationId changes
+        future: _loadEvents(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -93,7 +90,10 @@ class _OrganizationDashboardScreenState
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/create-event'),
+        onPressed: () async {
+          await context.push('/create-event');
+          if (mounted) setState(() {}); // Refresh list after creating event
+        },
         label: const Text('Crear Evento'),
         icon: const Icon(Icons.add),
       ),
