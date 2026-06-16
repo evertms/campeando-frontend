@@ -38,6 +38,11 @@ dependencies:
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.3.2
   json_annotation: ^4.9.0
+  go_router: ^14.7.2
+  jwt_decoder: ^2.0.1
+  campeando_system_design:
+    git:
+      url: https://github.com/evertms/campeando-system-design.git
 
 dev_dependencies:
   flutter_test:

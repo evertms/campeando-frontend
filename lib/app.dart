@@ -1,16 +1,16 @@
 import 'package:campeando_frontend/core/data/api_client.dart';
+import 'package:campeando_frontend/core/navigation/app_router.dart';
 import 'package:campeando_frontend/features/events/data/datasources/event_remote_datasource.dart';
 import 'package:campeando_frontend/features/events/data/repositories/event_repository_impl.dart';
 import 'package:campeando_frontend/features/events/domain/repositories/event_repository.dart';
-import 'package:campeando_frontend/features/events/presentation/screens/event_info_screen.dart';
 import 'package:campeando_frontend/features/registration/data/datasources/registration_remote_datasource.dart';
 import 'package:campeando_frontend/features/registration/data/repositories/registration_repository_impl.dart';
 import 'package:campeando_frontend/features/registration/domain/repositories/registration_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
-
-import 'features/events/presentation/screens/event_catalog_screen.dart';
+import 'package:campeando_system_design/design_system.dart';
 
 class CampeandoApp extends StatelessWidget {
   const CampeandoApp({super.key});
@@ -19,15 +19,11 @@ class CampeandoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: _getProviders(),
-      child: MaterialApp(
+      child: MaterialApp.router(
         title: 'Campeando',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          useMaterial3: true,
-          colorSchemeSeed: Colors.blue,
-          brightness: Brightness.light,
-        ),
-        home: const HomeScreen(),
+        routerConfig: appRouter,
+        theme: AppTheme.lightTheme,
       ),
     );
   }
@@ -82,10 +78,7 @@ class HomeScreen extends StatelessWidget {
                 title: 'Catálogo de Eventos',
                 subtitle: 'Listado responsivo (Grid/List) con M3 Cards.',
                 icon: Icons.list_alt,
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const EventCatalogScreen()),
-                ),
+                onTap: () => context.push('/events'),
               ),
               const SizedBox(height: 16),
               _MenuTile(
@@ -96,13 +89,7 @@ class HomeScreen extends StatelessWidget {
                   // Hardcoded eventId for now, this will come from the catalog later
                   const String mockEventId =
                       "3fa85f64-5717-4562-b3fc-2c963f66afa6";
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) =>
-                          const EventInfoScreen(eventId: mockEventId),
-                    ),
-                  );
+                  context.push('/events/$mockEventId');
                 },
               ),
             ],
