@@ -7,6 +7,7 @@ import 'package:campeando_frontend/features/events/presentation/screens/event_in
 import 'package:campeando_frontend/features/organizations/presentation/screens/create_organization_screen.dart';
 import 'package:campeando_frontend/features/organizations/presentation/screens/organization_dashboard_screen.dart';
 import 'package:campeando_frontend/features/organizations/presentation/screens/organization_selector_screen.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRouter {
@@ -21,13 +22,21 @@ class AppRouter {
       GoRoute(
         path: '/',
         builder: (context, state) {
+          if (authProvider.status == AuthStatus.initial) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
           if (authProvider.status == AuthStatus.authenticated &&
               authProvider.organizationId != null) {
             return const OrganizationDashboardScreen();
           }
-          return const EventCatalogScreen();
+          // If unauthenticated, redirect logic will take us to /login
+          // But for safety, return catalog or login
+          return const LoginScreen();
         },
       ),
+
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/register',
@@ -60,20 +69,26 @@ class AppRouter {
       ),
     ],
     redirect: (context, state) {
+      if (authProvider.status == AuthStatus.initial) {
+        return null; // Stay on current path or show nothing while initializing
+      }
+
       final loggingIn =
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/register';
       final isPublicRoute = state.matchedLocation.startsWith('/events');
 
       if (authProvider.status == AuthStatus.unauthenticated) {
-        if (loggingIn || isPublicRoute || state.matchedLocation == '/') {
+        if (loggingIn || isPublicRoute) {
           return null;
         }
         return '/login';
       }
 
       if (authProvider.status == AuthStatus.authenticated) {
-        if (loggingIn) return '/';
+        if (loggingIn) {
+          return '/';
+        }
 
         // Mandatory organization selection
         if (authProvider.organizationId == null &&

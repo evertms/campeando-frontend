@@ -3,13 +3,13 @@ import 'package:campeando_frontend/features/auth/domain/repositories/auth_reposi
 import 'package:flutter/material.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
-enum AuthStatus { authenticated, unauthenticated, authenticating }
+enum AuthStatus { initial, authenticated, unauthenticated, authenticating }
 
 class AuthProvider extends ChangeNotifier {
   final AuthRepository _authRepository;
   final StorageService _storageService;
 
-  AuthStatus _status = AuthStatus.unauthenticated;
+  AuthStatus _status = AuthStatus.initial;
   String? _token;
   String? _organizationId;
 
