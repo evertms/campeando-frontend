@@ -1,6 +1,8 @@
 import 'package:campeando_frontend/features/events/data/models/event_detail_model.dart';
 import 'package:campeando_frontend/features/events/domain/repositories/event_repository.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class EventInfoScreen extends StatefulWidget {
@@ -18,6 +20,21 @@ class _EventInfoScreenState extends State<EventInfoScreen> {
   void initState() {
     super.initState();
     _eventFuture = context.read<EventRepository>().getEventById(widget.eventId);
+  }
+
+  void _copyLink() {
+    // Current URI from the window location in web, or construct it
+    // Using a relative path for simplicity in constructing the full URL if needed
+    final String registrationPath = '/events/${widget.eventId}/register';
+    final String fullUrl = Uri.base.origin + registrationPath;
+
+    Clipboard.setData(ClipboardData(text: fullUrl)).then((_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Enlace de registro copiado al portapapeles')),
+        );
+      }
+    });
   }
 
   @override
@@ -41,7 +58,16 @@ class _EventInfoScreenState extends State<EventInfoScreen> {
 
           return CustomScrollView(
             slivers: [
-              SliverAppBar.large(title: Text(event.name)),
+              SliverAppBar.large(
+                title: Text(event.name),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.share),
+                    onPressed: _copyLink,
+                    tooltip: 'Copiar enlace de registro',
+                  ),
+                ],
+              ),
               SliverList(
                 delegate: SliverChildListDelegate([
                   _InfoTile(
@@ -60,6 +86,23 @@ class _EventInfoScreenState extends State<EventInfoScreen> {
                     icon: Icons.people,
                     title: 'Capacidad máxima',
                     subtitle: '${event.maxCapacity} personas',
+                  ),
+                  const SizedBox(height: 32),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: FilledButton.icon(
+                      onPressed: () => context.push('/events/${widget.eventId}/register'),
+                      icon: const Icon(Icons.app_registration),
+                      label: const Text('Registrarse ahora'),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: OutlinedButton.icon(
+                      onPressed: _copyLink,
+                      icon: const Icon(Icons.copy),
+                      label: const Text('Copiar enlace para participantes'),
+                    ),
                   ),
                 ]),
               ),

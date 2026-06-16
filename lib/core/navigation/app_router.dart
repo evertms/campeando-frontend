@@ -4,6 +4,7 @@ import 'package:campeando_frontend/features/auth/presentation/screens/register_s
 import 'package:campeando_frontend/features/events/presentation/screens/create_event_screen.dart';
 import 'package:campeando_frontend/features/events/presentation/screens/event_catalog_screen.dart';
 import 'package:campeando_frontend/features/events/presentation/screens/event_info_screen.dart';
+import 'package:campeando_frontend/features/events/presentation/screens/event_registration_screen.dart';
 import 'package:campeando_frontend/features/organizations/presentation/screens/create_organization_screen.dart';
 import 'package:campeando_frontend/features/organizations/presentation/screens/organization_dashboard_screen.dart';
 import 'package:campeando_frontend/features/organizations/presentation/screens/organization_selector_screen.dart';
@@ -64,6 +65,15 @@ class AppRouter {
               final eventId = state.pathParameters['id']!;
               return EventInfoScreen(eventId: eventId);
             },
+            routes: [
+              GoRoute(
+                path: 'register',
+                builder: (context, state) {
+                  final eventId = state.pathParameters['id']!;
+                  return EventRegistrationScreen(eventId: eventId);
+                },
+              ),
+            ],
           ),
         ],
       ),
