@@ -83,30 +83,28 @@ class AppRouter {
         return null;
       }
 
-      final location = state.matchedLocation;
-      final loggingIn = location == '/login' || location == '/register';
-      final isPublicRoute = location.startsWith('/events');
+      final path = state.uri.path;
+      final isAuthPath = path == '/login' || path == '/register';
+      final isPublicPath = path.startsWith('/events');
 
       // 1. Allow everyone to access public routes or login/register
-      if (loggingIn || isPublicRoute) {
-        // If already logged in and trying to go to login/register, go to home
-        if (authProvider.status == AuthStatus.authenticated && loggingIn) {
+      if (isAuthPath || isPublicPath) {
+        if (authProvider.status == AuthStatus.authenticated && isAuthPath) {
           return '/';
         }
         return null;
       }
 
-      // 2. If not logged in and not a public route, go to login
+      // 2. If not logged in and trying to access private route, go to login
       if (authProvider.status == AuthStatus.unauthenticated) {
         return '/login';
       }
 
       // 3. If logged in but no organization, force selection (except if already there)
       if (authProvider.status == AuthStatus.authenticated) {
-        final isSelectingOrg = location == '/organization-selector' ||
-            location == '/create-organization';
-
-        if (authProvider.organizationId == null && !isSelectingOrg) {
+        if (authProvider.organizationId == null &&
+            path != '/organization-selector' &&
+            path != '/create-organization') {
           return '/organization-selector';
         }
       }

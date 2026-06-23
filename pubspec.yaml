@@ -41,8 +41,11 @@ dependencies:
   go_router: ^14.7.2
   jwt_decoder: ^2.0.1
   campeando_system_design:
-    git:
-      url: https://github.com/evertms/campeando-system-design.git
+    path: 
+      ../campeando_system_design
+    #git:
+      #url: https://github.com/evertms/campeando-system-design.git
+      # Rama releases 
 
 dev_dependencies:
   flutter_test:

@@ -1,4 +1,3 @@
-/// TODO: Entidad base de identidad/autenticación para la plataforma Campeando.
 class AccountEntity {
   const AccountEntity({
     required this.id,

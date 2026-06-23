@@ -15,7 +15,6 @@ import 'package:campeando_frontend/features/registration/domain/repositories/reg
 import 'package:campeando_system_design/design_system.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:provider/single_child_widget.dart';
 
 class CampeandoApp extends StatefulWidget {
   final StorageService storageService;
@@ -28,66 +27,59 @@ class CampeandoApp extends StatefulWidget {
 
 class _CampeandoAppState extends State<CampeandoApp> {
   late final AppRouter _appRouter;
-  bool _isRouterInitialized = false;
+
+  // Infrastructure & Repositories
+  late final ApiClient _apiClient;
+  late final EventRepository _eventRepository;
+  late final RegistrationRepository _registrationRepository;
+  late final AuthRepository _authRepository;
+  late final OrganizationRepository _organizationRepository;
+  late final AuthProvider _authProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    _apiClient = ApiClient(storageService: widget.storageService);
+
+    final eventRemoteDatasource = EventRemoteDatasourceImpl(
+      apiClient: _apiClient,
+    );
+    final registrationRemoteDatasource = RegistrationRemoteDatasourceImpl(
+      apiClient: _apiClient,
+    );
+
+    _eventRepository = EventRepositoryImpl(
+      remoteDatasource: eventRemoteDatasource,
+    );
+    _registrationRepository = RegistrationRepositoryImpl(
+      remoteDatasource: registrationRemoteDatasource,
+    );
+    _authRepository = AuthRepositoryImpl(apiClient: _apiClient);
+    _organizationRepository = OrganizationRepositoryImpl(apiClient: _apiClient);
+    _authProvider = AuthProvider(
+      authRepository: _authRepository,
+      storageService: widget.storageService,
+    );
+    _appRouter = AppRouter(_authProvider);
+  }
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: _getProviders(),
-      child: Builder(
-        builder: (context) {
-          if (!_isRouterInitialized) {
-            _appRouter = AppRouter(context.read<AuthProvider>());
-            _isRouterInitialized = true;
-          }
-
-          return MaterialApp.router(
-            title: 'Campeando',
-            debugShowCheckedModeBanner: false,
-            routerConfig: _appRouter.router,
-            theme: AppTheme.lightTheme,
-          );
-        },
+      providers: [
+        Provider<StorageService>.value(value: widget.storageService),
+        Provider<EventRepository>.value(value: _eventRepository),
+        Provider<RegistrationRepository>.value(value: _registrationRepository),
+        Provider<AuthRepository>.value(value: _authRepository),
+        Provider<OrganizationRepository>.value(value: _organizationRepository),
+        ChangeNotifierProvider<AuthProvider>.value(value: _authProvider),
+      ],
+      child: MaterialApp.router(
+        title: 'Campeando',
+        debugShowCheckedModeBanner: false,
+        routerConfig: _appRouter.router,
+        theme: AppTheme.lightTheme,
       ),
     );
-  }
-
-  List<SingleChildWidget> _getProviders() {
-    // Infrastructure
-    final apiClient = ApiClient(storageService: widget.storageService);
-
-    // Datasources
-    final eventRemoteDatasource = EventRemoteDatasourceImpl(
-      apiClient: apiClient,
-    );
-    final registrationRemoteDatasource = RegistrationRemoteDatasourceImpl(
-      apiClient: apiClient,
-    );
-
-    // Repositories
-    final eventRepository = EventRepositoryImpl(
-      remoteDatasource: eventRemoteDatasource,
-    );
-    final registrationRepository = RegistrationRepositoryImpl(
-      remoteDatasource: registrationRemoteDatasource,
-    );
-    final authRepository = AuthRepositoryImpl(apiClient: apiClient);
-    final organizationRepository = OrganizationRepositoryImpl(
-      apiClient: apiClient,
-    );
-
-    return [
-      Provider<StorageService>.value(value: widget.storageService),
-      Provider<EventRepository>.value(value: eventRepository),
-      Provider<RegistrationRepository>.value(value: registrationRepository),
-      Provider<AuthRepository>.value(value: authRepository),
-      Provider<OrganizationRepository>.value(value: organizationRepository),
-      ChangeNotifierProvider<AuthProvider>(
-        create: (context) => AuthProvider(
-          authRepository: authRepository,
-          storageService: widget.storageService,
-        ),
-      ),
-    ];
   }
 }
