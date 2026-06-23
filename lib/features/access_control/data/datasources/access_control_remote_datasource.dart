@@ -1,5 +1,5 @@
-import '../../../core/data/api_client.dart';
-import 'models/qr_validation_response_model.dart';
+import '../../../../core/data/api_client.dart';
+import '../models/qr_validation_response_model.dart';
 
 abstract class AccessControlRemoteDatasource {
   Future<QrValidationResponseModel> validateQr(String payload);

@@ -1,4 +1,4 @@
-import '../data/models/pending_application_model.dart';
+import '../../data/models/pending_application_model.dart';
 
 abstract class ApplicationsRepository {
   Future<List<PendingApplicationModel>> getPendingApplications(

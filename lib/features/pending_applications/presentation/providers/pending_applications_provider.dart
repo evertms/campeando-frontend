@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/repositories/applications_repository.dart';
 import '../../data/models/pending_application_model.dart';
+import '../../domain/repositories/applications_repository.dart';
 
 class PendingApplicationsProvider extends ChangeNotifier {
   final ApplicationsRepository repository;

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/repositories/payment_links_repository.dart';
 import '../../application/payment_link_sharing_service.dart';
+import '../../domain/repositories/payment_links_repository.dart';
 
 class PaymentLinksProvider extends ChangeNotifier {
   final PaymentLinksRepository repository;

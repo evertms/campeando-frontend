@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/repositories/payment_validation_repository.dart';
 import '../../application/share_deep_link_service.dart';
+import '../../domain/repositories/payment_validation_repository.dart';
 
 class PaymentValidationProvider extends ChangeNotifier {
   final PaymentValidationRepository repository;
