@@ -3,5 +3,5 @@ import 'package:campeando_frontend/features/registration/data/models/registratio
 abstract class RegistrationRepository {
   Future<void> requestOtp({required String eventId, required RequestOtpRequest request});
   Future<bool> verifyOtp({required String eventId, required VerifyOtpRequest request});
-  Future<void> submitRegistration({required String eventId, required SubmitRegistrationRequest request});
+  Future<String> submitRegistration({required String eventId, required SubmitRegistrationRequest request});
 }

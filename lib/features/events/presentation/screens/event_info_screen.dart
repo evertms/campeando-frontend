@@ -136,7 +136,7 @@ class _EventInfoScreenState extends State<EventInfoScreen> {
                     ),
                     const SizedBox(height: 8),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                       child: FilledButton.tonalIcon(
                         onPressed: () => context.push('/scan-qr'),
                         icon: const Icon(Icons.qr_code_scanner),
@@ -144,7 +144,7 @@ class _EventInfoScreenState extends State<EventInfoScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                       child: FilledButton.tonalIcon(
                         onPressed: () => context.push(
                           '/pending-applications/${widget.eventId}',

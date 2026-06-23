@@ -3,6 +3,7 @@ import '../../../../core/data/api_client.dart';
 
 abstract class PaymentValidationRemoteDatasource {
   Future<String> uploadReceipt(String applicationId, String base64Image);
+  Future<void> updateOrderStatus(String orderId, String status);
 }
 
 class PaymentValidationRemoteDatasourceImpl
@@ -25,5 +26,14 @@ class PaymentValidationRemoteDatasourceImpl
       return '$baseUrl$receiptUrl';
     }
     return receiptUrl;
+  }
+
+  @override
+  Future<void> updateOrderStatus(String orderId, String status) async {
+    // El backend acepta el estado como string (ej. "Confirmed" / "Rejected").
+    await apiClient.patch(
+      '/api/registration/orders/$orderId/status',
+      body: {'status': status},
+    );
   }
 }

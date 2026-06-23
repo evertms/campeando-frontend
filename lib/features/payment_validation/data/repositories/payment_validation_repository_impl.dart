@@ -10,4 +10,14 @@ class PaymentValidationRepositoryImpl implements PaymentValidationRepository {
   Future<String> uploadReceipt(String applicationId, String base64Image) async {
     return await remoteDatasource.uploadReceipt(applicationId, base64Image);
   }
+
+  @override
+  Future<void> acceptApplication(String orderId) {
+    return remoteDatasource.updateOrderStatus(orderId, 'Confirmed');
+  }
+
+  @override
+  Future<void> rejectApplication(String orderId) {
+    return remoteDatasource.updateOrderStatus(orderId, 'Rejected');
+  }
 }

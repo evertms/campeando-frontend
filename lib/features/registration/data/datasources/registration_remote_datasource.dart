@@ -4,7 +4,7 @@ import 'package:campeando_frontend/features/registration/data/models/registratio
 abstract class RegistrationRemoteDatasource {
   Future<void> requestOtp({required String eventId, required RequestOtpRequest request});
   Future<void> verifyOtp({required String eventId, required VerifyOtpRequest request});
-  Future<void> submitRegistration({required String eventId, required SubmitRegistrationRequest request});
+  Future<String> submitRegistration({required String eventId, required SubmitRegistrationRequest request});
 }
 
 class RegistrationRemoteDatasourceImpl implements RegistrationRemoteDatasource {
@@ -31,10 +31,13 @@ class RegistrationRemoteDatasourceImpl implements RegistrationRemoteDatasource {
   }
 
   @override
-  Future<void> submitRegistration({required String eventId, required SubmitRegistrationRequest request}) async {
-    await apiClient.post(
+  Future<String> submitRegistration({required String eventId, required SubmitRegistrationRequest request}) async {
+    final response = await apiClient.post(
       '/api/registration/$eventId/submit',
       body: request.toJson(),
     );
+    // El backend responde { "orderId": "<guid>" }; lo usamos para asociar el
+    // comprobante de pago subido en el registro público.
+    return response['orderId'] as String;
   }
 }

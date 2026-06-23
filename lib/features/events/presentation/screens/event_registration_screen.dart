@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:campeando_frontend/features/events/data/models/event_detail_model.dart';
 import 'package:campeando_frontend/features/events/domain/repositories/event_repository.dart';
+import 'package:campeando_frontend/features/payment_validation/domain/repositories/payment_validation_repository.dart';
 import 'package:campeando_frontend/features/registration/data/models/registration_request_models.dart';
 import 'package:campeando_frontend/features/registration/domain/repositories/registration_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 class EventRegistrationScreen extends StatefulWidget {
@@ -21,12 +25,16 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _otpController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
 
   bool _isOtpSectionVisible = false;
   bool _isOtpVerified = false;
   bool _isLoading = false;
   bool _isRequestingOtp = false;
   bool _isVerifyingOtp = false;
+
+  // Comprobante de pago subido durante el registro público (opcional).
+  Uint8List? _receiptBytes;
 
   late Future<EventDetailModel> _eventFuture;
 
@@ -95,10 +103,27 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
     });
   }
 
+  Future<void> _pickReceipt() async {
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+      maxWidth: 1600,
+    );
+    if (image == null) return;
+    final bytes = await image.readAsBytes();
+    if (!mounted) return;
+    setState(() => _receiptBytes = bytes);
+  }
+
   Future<void> _submitRegistration() async {
+    // Capturamos los repositorios antes de los await para no usar el context
+    // a través de gaps asíncronos.
+    final registrationRepository = context.read<RegistrationRepository>();
+    final paymentRepository = context.read<PaymentValidationRepository>();
+
     setState(() => _isLoading = true);
     try {
-      await context.read<RegistrationRepository>().submitRegistration(
+      final orderId = await registrationRepository.submitRegistration(
         eventId: widget.eventId,
         request: SubmitRegistrationRequest(
           email: _emailController.text,
@@ -106,6 +131,16 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
           phone: _phoneController.text,
         ),
       );
+
+      // Si el participante adjuntó comprobante, lo subimos asociado a su
+      // inscripción (orderId) para que el staff lo valide.
+      if (_receiptBytes != null) {
+        await paymentRepository.uploadReceipt(
+          orderId,
+          base64Encode(_receiptBytes!),
+        );
+      }
+
       setState(() => _isLoading = false);
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -273,6 +308,37 @@ class _EventRegistrationScreenState extends State<EventRegistrationScreen> {
                               ),
                             ),
                           ),
+
+                        // Payment receipt upload (public registration step)
+                        if (_isOtpVerified) ...[
+                          const SizedBox(height: 24),
+                          Text(
+                            'Comprobante de pago',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 8),
+                          if (_receiptBytes != null) ...[
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.memory(
+                                _receiptBytes!,
+                                height: 180,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                          OutlinedButton.icon(
+                            onPressed: _isLoading ? null : _pickReceipt,
+                            icon: const Icon(Icons.photo_library),
+                            label: Text(
+                              _receiptBytes == null
+                                  ? 'Subir comprobante de pago'
+                                  : 'Cambiar comprobante',
+                            ),
+                          ),
+                        ],
 
                         const SizedBox(height: 32),
 

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../application/share_deep_link_service.dart';
 import '../../domain/repositories/payment_validation_repository.dart';
 
+enum ApplicationDecision { none, accepted, rejected }
+
 class PaymentValidationProvider extends ChangeNotifier {
   final PaymentValidationRepository repository;
   final ShareDeepLinkService shareService;
@@ -12,27 +14,41 @@ class PaymentValidationProvider extends ChangeNotifier {
     required this.shareService,
   });
 
-  bool _isUploading = false;
-  bool get isUploading => _isUploading;
-
-  String? _receiptUrl;
-  String? get receiptUrl => _receiptUrl;
+  bool _isProcessing = false;
+  bool get isProcessing => _isProcessing;
 
   String? _error;
   String? get error => _error;
 
-  Future<void> uploadReceipt(String applicationId, String base64Image) async {
-    _isUploading = true;
+  ApplicationDecision _decision = ApplicationDecision.none;
+  ApplicationDecision get decision => _decision;
+
+  Future<bool> acceptApplication(String orderId) =>
+      _decide(orderId, accept: true);
+
+  Future<bool> rejectApplication(String orderId) =>
+      _decide(orderId, accept: false);
+
+  Future<bool> _decide(String orderId, {required bool accept}) async {
+    _isProcessing = true;
     _error = null;
     notifyListeners();
 
     try {
-      final url = await repository.uploadReceipt(applicationId, base64Image);
-      _receiptUrl = url;
+      if (accept) {
+        await repository.acceptApplication(orderId);
+      } else {
+        await repository.rejectApplication(orderId);
+      }
+      _decision = accept
+          ? ApplicationDecision.accepted
+          : ApplicationDecision.rejected;
+      return true;
     } catch (e) {
-      _error = 'Error al subir el comprobante: $e';
+      _error = 'No se pudo actualizar la solicitud: $e';
+      return false;
     } finally {
-      _isUploading = false;
+      _isProcessing = false;
       notifyListeners();
     }
   }

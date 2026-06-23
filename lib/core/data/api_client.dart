@@ -63,6 +63,24 @@ class ApiClient {
     }
   }
 
+  Future<dynamic> patch(
+    String path, {
+    required Map<String, dynamic> body,
+  }) async {
+    final uri = Uri.parse('$baseUrl$path');
+    try {
+      final headers = await _getHeaders();
+      final response = await _httpClient.patch(
+        uri,
+        headers: headers,
+        body: json.encode(body),
+      );
+      return _handleResponse(response);
+    } on SocketException {
+      throw Exception('No Internet connection');
+    }
+  }
+
   dynamic _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) {

@@ -25,7 +25,7 @@ class RegistrationRepositoryImpl implements RegistrationRepository {
   }
 
   @override
-  Future<void> submitRegistration({required String eventId, required SubmitRegistrationRequest request}) {
+  Future<String> submitRegistration({required String eventId, required SubmitRegistrationRequest request}) {
     return remoteDatasource.submitRegistration(eventId: eventId, request: request);
   }
 }
