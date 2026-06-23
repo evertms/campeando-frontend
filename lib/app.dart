@@ -7,6 +7,9 @@ import 'package:campeando_frontend/features/access_control/domain/repositories/a
 import 'package:campeando_frontend/features/auth/data/auth_repository_impl.dart';
 import 'package:campeando_frontend/features/auth/domain/repositories/auth_repository.dart';
 import 'package:campeando_frontend/features/auth/presentation/auth_provider.dart';
+import 'package:campeando_frontend/features/dashboard/data/datasources/dashboard_remote_datasource.dart';
+import 'package:campeando_frontend/features/dashboard/data/repositories/dashboard_repository_impl.dart';
+import 'package:campeando_frontend/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:campeando_frontend/features/events/data/datasources/event_remote_datasource.dart';
 import 'package:campeando_frontend/features/events/data/repositories/event_repository_impl.dart';
 import 'package:campeando_frontend/features/events/domain/repositories/event_repository.dart';
@@ -55,6 +58,7 @@ class _CampeandoAppState extends State<CampeandoApp> {
   late final ApplicationsRepository _applicationsRepository;
   late final PaymentValidationRepository _paymentValidationRepository;
   late final PaymentLinksRepository _paymentLinksRepository;
+  late final DashboardRepository _dashboardRepository;
   late final ShareDeepLinkService _shareDeepLinkService;
   late final PaymentLinkSharingService _paymentLinkSharingService;
 
@@ -100,6 +104,9 @@ class _CampeandoAppState extends State<CampeandoApp> {
     _paymentLinksRepository = PaymentLinksRepositoryImpl(
       remoteDatasource: PaymentLinksRemoteDatasourceImpl(apiClient: _apiClient),
     );
+    _dashboardRepository = DashboardRepositoryImpl(
+      remoteDatasource: DashboardRemoteDatasourceImpl(apiClient: _apiClient),
+    );
     _shareDeepLinkService = ShareDeepLinkService();
     _paymentLinkSharingService = PaymentLinkSharingService();
 
@@ -123,6 +130,7 @@ class _CampeandoAppState extends State<CampeandoApp> {
           value: _paymentValidationRepository,
         ),
         Provider<PaymentLinksRepository>.value(value: _paymentLinksRepository),
+        Provider<DashboardRepository>.value(value: _dashboardRepository),
         Provider<ShareDeepLinkService>.value(value: _shareDeepLinkService),
         Provider<PaymentLinkSharingService>.value(
           value: _paymentLinkSharingService,

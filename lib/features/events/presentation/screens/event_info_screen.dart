@@ -135,13 +135,22 @@ class _EventInfoScreenState extends State<EventInfoScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: FilledButton.tonalIcon(
                         onPressed: () => context.push(
                           '/pending-applications/${widget.eventId}',
                         ),
                         icon: const Icon(Icons.pending_actions),
                         label: const Text('Solicitudes pendientes'),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: FilledButton.tonalIcon(
+                        onPressed: () =>
+                            context.push('/dashboard/${widget.eventId}'),
+                        icon: const Icon(Icons.bar_chart),
+                        label: const Text('Métricas del evento'),
                       ),
                     ),
                   ],

@@ -4,6 +4,9 @@ import 'package:campeando_frontend/features/access_control/presentation/screens/
 import 'package:campeando_frontend/features/auth/presentation/auth_provider.dart';
 import 'package:campeando_frontend/features/auth/presentation/screens/login_screen.dart';
 import 'package:campeando_frontend/features/auth/presentation/screens/register_screen.dart';
+import 'package:campeando_frontend/features/dashboard/domain/repositories/dashboard_repository.dart';
+import 'package:campeando_frontend/features/dashboard/presentation/providers/dashboard_provider.dart';
+import 'package:campeando_frontend/features/dashboard/presentation/screens/staff_dashboard_screen.dart';
 import 'package:campeando_frontend/features/events/presentation/screens/create_event_screen.dart';
 import 'package:campeando_frontend/features/events/presentation/screens/event_catalog_screen.dart';
 import 'package:campeando_frontend/features/events/presentation/screens/event_info_screen.dart';
@@ -95,6 +98,17 @@ class AppRouter {
       ),
 
       // --- Staff operations (MVP features) ---
+      GoRoute(
+        path: '/dashboard/:eventId',
+        builder: (context, state) {
+          final eventId = state.pathParameters['eventId']!;
+          return ChangeNotifierProvider(
+            create: (ctx) =>
+                DashboardProvider(repository: ctx.read<DashboardRepository>()),
+            child: StaffDashboardScreen(eventId: eventId),
+          );
+        },
+      ),
       GoRoute(
         path: '/scan-qr',
         builder: (context, state) => ChangeNotifierProvider(
