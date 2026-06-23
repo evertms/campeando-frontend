@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/payment_validation_provider.dart';
@@ -22,6 +26,31 @@ class ApplicationDetailScreen extends StatefulWidget {
 }
 
 class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> {
+  final ImagePicker _picker = ImagePicker();
+  Uint8List? _localPreview;
+
+  Future<void> _pickAndUploadReceipt() async {
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+      maxWidth: 1600,
+    );
+    if (image == null) return;
+
+    final bytes = await image.readAsBytes();
+    if (!mounted) return;
+    setState(() => _localPreview = bytes);
+
+    final provider = context.read<PaymentValidationProvider>();
+    await provider.uploadReceipt(widget.applicationId, base64Encode(bytes));
+
+    if (!mounted) return;
+    final message = provider.error ?? 'Comprobante subido correctamente';
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,6 +89,16 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> {
             const SizedBox(height: 16),
             Consumer<PaymentValidationProvider>(
               builder: (context, provider, child) {
+                if (_localPreview != null) {
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.memory(
+                      _localPreview!,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  );
+                }
                 return ReceiptPreviewWidget(imageUrl: provider.receiptUrl);
               },
             ),
@@ -73,22 +112,8 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> {
                 return SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () async {
-                      // Dummy base64 file content instead of real file picking
-                      const dummyBase64 =
-                          'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
-                      await provider.uploadReceipt(
-                        widget.applicationId,
-                        dummyBase64,
-                      );
-
-                      if (provider.error != null && context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(provider.error!)),
-                        );
-                      }
-                    },
-                    icon: const Icon(Icons.upload_file),
+                    onPressed: _pickAndUploadReceipt,
+                    icon: const Icon(Icons.photo_library),
                     label: const Text('Subir Comprobante'),
                   ),
                 );
