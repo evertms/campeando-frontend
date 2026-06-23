@@ -75,6 +75,15 @@ class _EventInfoScreenState extends State<EventInfoScreen> {
               ),
               SliverList(
                 delegate: SliverChildListDelegate([
+                  if (event.coverImageUrl != null)
+                    Image.network(
+                      event.coverImageUrl!,
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const SizedBox.shrink(),
+                    ),
                   _InfoTile(
                     icon: Icons.calendar_today,
                     title: 'Fecha de inicio',
