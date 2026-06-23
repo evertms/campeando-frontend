@@ -1,3 +1,4 @@
+import '../../../../core/config.dart';
 import '../../../../core/data/api_client.dart';
 
 abstract class PaymentValidationRemoteDatasource {
@@ -13,9 +14,16 @@ class PaymentValidationRemoteDatasourceImpl
   @override
   Future<String> uploadReceipt(String applicationId, String base64Image) async {
     final response = await apiClient.post(
-      '/payments/upload-receipt',
+      '/api/payments/upload-receipt',
       body: {'applicationId': applicationId, 'fileContentBase64': base64Image},
     );
-    return response['receiptUrl'] as String;
+    final receiptUrl = response['receiptUrl'] as String;
+
+    // El backend devuelve una ruta relativa (ej. /receipts/{id}.png); la
+    // resolvemos contra el host de la API para que Image.network la cargue.
+    if (receiptUrl.startsWith('/')) {
+      return '$baseUrl$receiptUrl';
+    }
+    return receiptUrl;
   }
 }

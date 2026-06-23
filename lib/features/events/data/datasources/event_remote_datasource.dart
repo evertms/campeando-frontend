@@ -11,6 +11,8 @@ abstract class EventRemoteDatasource {
     required DateTime endDate,
     required int maxCapacity,
     required String organizationId,
+    String? coverImageBase64,
+    String? paymentQrBase64,
   });
 }
 
@@ -40,6 +42,8 @@ class EventRemoteDatasourceImpl implements EventRemoteDatasource {
     required DateTime endDate,
     required int maxCapacity,
     required String organizationId,
+    String? coverImageBase64,
+    String? paymentQrBase64,
   }) async {
     await apiClient.post(
       '/api/events',
@@ -49,6 +53,8 @@ class EventRemoteDatasourceImpl implements EventRemoteDatasource {
         'endDate': endDate.toIso8601String(),
         'maxCapacity': maxCapacity,
         'organizationId': organizationId,
+        'coverImageBase64': coverImageBase64,
+        'paymentQrBase64': paymentQrBase64,
       },
     );
   }

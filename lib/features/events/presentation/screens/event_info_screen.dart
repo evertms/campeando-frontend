@@ -1,3 +1,4 @@
+import 'package:campeando_frontend/features/auth/presentation/auth_provider.dart';
 import 'package:campeando_frontend/features/events/data/models/event_detail_model.dart';
 import 'package:campeando_frontend/features/events/domain/repositories/event_repository.dart';
 import 'package:flutter/material.dart';
@@ -31,7 +32,9 @@ class _EventInfoScreenState extends State<EventInfoScreen> {
     Clipboard.setData(ClipboardData(text: fullUrl)).then((_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Enlace de registro copiado al portapapeles')),
+          const SnackBar(
+            content: Text('Enlace de registro copiado al portapapeles'),
+          ),
         );
       }
     });
@@ -55,6 +58,8 @@ class _EventInfoScreenState extends State<EventInfoScreen> {
             );
           }
           final event = snapshot.data!;
+          final isStaff =
+              context.watch<AuthProvider>().status == AuthStatus.authenticated;
 
           return CustomScrollView(
             slivers: [
@@ -70,6 +75,15 @@ class _EventInfoScreenState extends State<EventInfoScreen> {
               ),
               SliverList(
                 delegate: SliverChildListDelegate([
+                  if (event.coverImageUrl != null)
+                    Image.network(
+                      event.coverImageUrl!,
+                      height: 200,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const SizedBox.shrink(),
+                    ),
                   _InfoTile(
                     icon: Icons.calendar_today,
                     title: 'Fecha de inicio',
@@ -91,7 +105,8 @@ class _EventInfoScreenState extends State<EventInfoScreen> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: FilledButton.icon(
-                      onPressed: () => context.push('/events/${widget.eventId}/register'),
+                      onPressed: () =>
+                          context.push('/events/${widget.eventId}/register'),
                       icon: const Icon(Icons.app_registration),
                       label: const Text('Registrarse ahora'),
                     ),
@@ -104,6 +119,50 @@ class _EventInfoScreenState extends State<EventInfoScreen> {
                       label: const Text('Copiar enlace para participantes'),
                     ),
                   ),
+                  if (isStaff) ...[
+                    const Divider(height: 32),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Operaciones del staff',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: FilledButton.tonalIcon(
+                        onPressed: () => context.push('/scan-qr'),
+                        icon: const Icon(Icons.qr_code_scanner),
+                        label: const Text('Escanear QR de acceso'),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: FilledButton.tonalIcon(
+                        onPressed: () => context.push(
+                          '/pending-applications/${widget.eventId}',
+                        ),
+                        icon: const Icon(Icons.pending_actions),
+                        label: const Text('Solicitudes pendientes'),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: FilledButton.tonalIcon(
+                        onPressed: () =>
+                            context.push('/dashboard/${widget.eventId}'),
+                        icon: const Icon(Icons.bar_chart),
+                        label: const Text('Métricas del evento'),
+                      ),
+                    ),
+                  ],
                 ]),
               ),
             ],

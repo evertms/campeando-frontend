@@ -14,7 +14,7 @@ class AccessControlRemoteDatasourceImpl
   @override
   Future<QrValidationResponseModel> validateQr(String payload) async {
     final response = await apiClient.post(
-      '/events/access/validate-qr',
+      '/api/events/access/validate-qr',
       body: {'payload': payload},
     );
     return QrValidationResponseModel.fromJson(response);

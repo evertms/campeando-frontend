@@ -25,6 +25,8 @@ class EventRepositoryImpl implements EventRepository {
     required DateTime endDate,
     required int maxCapacity,
     required String organizationId,
+    String? coverImageBase64,
+    String? paymentQrBase64,
   }) {
     return remoteDatasource.createEvent(
       name: name,
@@ -32,6 +34,8 @@ class EventRepositoryImpl implements EventRepository {
       endDate: endDate,
       maxCapacity: maxCapacity,
       organizationId: organizationId,
+      coverImageBase64: coverImageBase64,
+      paymentQrBase64: paymentQrBase64,
     );
   }
 }

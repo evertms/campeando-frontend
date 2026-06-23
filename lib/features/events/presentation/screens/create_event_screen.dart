@@ -1,7 +1,11 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:campeando_frontend/features/auth/presentation/auth_provider.dart';
 import 'package:campeando_frontend/features/events/domain/repositories/event_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 
 class CreateEventScreen extends StatefulWidget {
@@ -17,6 +21,71 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
   DateTime _startDate = DateTime.now().add(const Duration(days: 1));
   DateTime _endDate = DateTime.now().add(const Duration(days: 1, hours: 2));
   bool _isLoading = false;
+
+  final ImagePicker _picker = ImagePicker();
+  Uint8List? _coverPreview;
+  String? _coverBase64;
+  Uint8List? _qrPreview;
+  String? _qrBase64;
+
+  Future<void> _pickImage({required bool isCover}) async {
+    final image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 75,
+      maxWidth: 1600,
+    );
+    if (image == null) return;
+
+    final bytes = await image.readAsBytes();
+    if (!mounted) return;
+    setState(() {
+      if (isCover) {
+        _coverPreview = bytes;
+        _coverBase64 = base64Encode(bytes);
+      } else {
+        _qrPreview = bytes;
+        _qrBase64 = base64Encode(bytes);
+      }
+    });
+  }
+
+  Widget _imagePicker({
+    required String label,
+    required Uint8List? preview,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            height: 160,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade400),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: preview != null
+                ? Image.memory(preview, fit: BoxFit.cover)
+                : const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add_photo_alternate_outlined, size: 36),
+                      SizedBox(height: 8),
+                      Text('Toca para seleccionar'),
+                    ],
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -59,6 +128,18 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
                 border: OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 24),
+            _imagePicker(
+              label: 'Portada del evento (opcional)',
+              preview: _coverPreview,
+              onTap: () => _pickImage(isCover: true),
+            ),
+            const SizedBox(height: 24),
+            _imagePicker(
+              label: 'QR de pago (opcional)',
+              preview: _qrPreview,
+              onTap: () => _pickImage(isCover: false),
             ),
             const SizedBox(height: 24),
             FilledButton(
@@ -135,6 +216,8 @@ class _CreateEventScreenState extends State<CreateEventScreen> {
         endDate: _endDate,
         maxCapacity: int.tryParse(_capacityController.text) ?? 0,
         organizationId: orgId,
+        coverImageBase64: _coverBase64,
+        paymentQrBase64: _qrBase64,
       );
 
       if (mounted) {

@@ -10,5 +10,7 @@ abstract class EventRepository {
     required DateTime endDate,
     required int maxCapacity,
     required String organizationId,
+    String? coverImageBase64,
+    String? paymentQrBase64,
   });
 }
