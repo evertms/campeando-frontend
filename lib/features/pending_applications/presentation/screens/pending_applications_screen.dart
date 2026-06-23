@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/pending_applications_provider.dart';
@@ -73,9 +74,10 @@ class _PendingApplicationsScreenState extends State<PendingApplicationsScreen> {
                 title: Text(application.applicantName),
                 subtitle: Text('Estado de pago: ${application.paymentStatus}'),
                 trailing: const Icon(Icons.chevron_right),
-                onTap: () {
-                  // TODO: Navigate to application detail
-                },
+                onTap: () => context.push(
+                  '/applications/${application.id}',
+                  extra: application,
+                ),
               );
             },
           );

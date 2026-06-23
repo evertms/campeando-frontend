@@ -13,7 +13,7 @@ class PaymentValidationRemoteDatasourceImpl
   @override
   Future<String> uploadReceipt(String applicationId, String base64Image) async {
     final response = await apiClient.post(
-      '/payments/upload-receipt',
+      '/api/payments/upload-receipt',
       body: {'applicationId': applicationId, 'fileContentBase64': base64Image},
     );
     return response['receiptUrl'] as String;

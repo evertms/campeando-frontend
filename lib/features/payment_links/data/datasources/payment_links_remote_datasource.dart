@@ -12,7 +12,7 @@ class PaymentLinksRemoteDatasourceImpl implements PaymentLinksRemoteDatasource {
   @override
   Future<String> generatePaymentLink(String applicationId) async {
     final response = await apiClient.post(
-      '/payments/links/generate',
+      '/api/payments/links/generate',
       body: {'applicationId': applicationId},
     );
     return response['paymentLink'] as String;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/payment_validation_provider.dart';
@@ -92,6 +93,18 @@ class _ApplicationDetailScreenState extends State<ApplicationDetailScreen> {
                   ),
                 );
               },
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => context.push(
+                  '/applications/${widget.applicationId}/payment-link',
+                  extra: widget.applicantName,
+                ),
+                icon: const Icon(Icons.send),
+                label: const Text('Enviar Enlace de Pago'),
+              ),
             ),
           ],
         ),

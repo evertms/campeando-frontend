@@ -19,7 +19,7 @@ class ApplicationsRemoteDatasourceImpl implements ApplicationsRemoteDatasource {
     String eventId,
   ) async {
     final response = await apiClient.get(
-      '/applications/pending?tenantId=$tenantId&eventId=$eventId',
+      '/api/applications/pending?tenantId=$tenantId&eventId=$eventId',
     );
     final List<dynamic> data = response['applications'] as List<dynamic>;
     return data
