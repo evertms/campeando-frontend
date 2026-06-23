@@ -45,6 +45,8 @@ dependencies:
       ../campeando_system_design
   mobile_scanner: ^7.2.0
   permission_handler: ^12.0.3
+  share_plus: ^13.1.0
+  app_links: ^7.1.2
     #git:
       #url: https://github.com/evertms/campeando-system-design.git
       # Rama releases 
