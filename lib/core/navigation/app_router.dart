@@ -4,6 +4,9 @@ import 'package:campeando_frontend/features/access_control/presentation/screens/
 import 'package:campeando_frontend/features/auth/presentation/auth_provider.dart';
 import 'package:campeando_frontend/features/auth/presentation/screens/login_screen.dart';
 import 'package:campeando_frontend/features/auth/presentation/screens/register_screen.dart';
+import 'package:campeando_frontend/features/confirmed_participants/domain/repositories/confirmed_participants_repository.dart';
+import 'package:campeando_frontend/features/confirmed_participants/presentation/providers/confirmed_participants_provider.dart';
+import 'package:campeando_frontend/features/confirmed_participants/presentation/screens/confirmed_participants_screen.dart';
 import 'package:campeando_frontend/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:campeando_frontend/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:campeando_frontend/features/dashboard/presentation/screens/staff_dashboard_screen.dart';
@@ -106,6 +109,18 @@ class AppRouter {
             create: (ctx) =>
                 DashboardProvider(repository: ctx.read<DashboardRepository>()),
             child: StaffDashboardScreen(eventId: eventId),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/confirmed-participants/:eventId',
+        builder: (context, state) {
+          final eventId = state.pathParameters['eventId']!;
+          return ChangeNotifierProvider(
+            create: (ctx) => ConfirmedParticipantsProvider(
+              repository: ctx.read<ConfirmedParticipantsRepository>(),
+            ),
+            child: ConfirmedParticipantsScreen(eventId: eventId),
           );
         },
       ),

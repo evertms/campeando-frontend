@@ -25,7 +25,8 @@ class AccessControlProvider extends ChangeNotifier {
     try {
       final response = await repository.validateQr(payload);
       if (response.success) {
-        _successMessage = response.message;
+        _successMessage =
+            '${response.message} (Raciones consumidas: ${response.rationsConsumed})';
       } else {
         _error = response.message;
       }
