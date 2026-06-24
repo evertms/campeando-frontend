@@ -24,8 +24,9 @@ class _OrganizationSelectorScreenState
 
   void _refresh() {
     setState(() {
-      _orgsFuture =
-          context.read<OrganizationRepository>().getAllOrganizations();
+      _orgsFuture = context
+          .read<OrganizationRepository>()
+          .getAllOrganizations();
     });
   }
 
@@ -35,10 +36,7 @@ class _OrganizationSelectorScreenState
       appBar: AppBar(
         title: const Text('Seleccionar Organización'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _refresh,
-          ),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: _refresh),
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () => context.read<AuthProvider>().logout(),
@@ -104,9 +102,9 @@ class _OrganizationSelectorScreenState
   }
 
   void _selectOrg(String id) async {
+    // Al fijar la organización, AuthProvider notifica y el `redirect` del
+    // router decide el destino: el deep link recordado (?from=...) o el home.
+    // Por eso NO navegamos manualmente aquí.
     await context.read<AuthProvider>().selectOrganization(id);
-    if (mounted) {
-      context.go('/');
-    }
   }
 }

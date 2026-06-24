@@ -1,6 +1,7 @@
 import 'package:campeando_frontend/core/data/api_client.dart';
 import 'package:campeando_frontend/core/data/storage_service.dart';
 import 'package:campeando_frontend/core/navigation/app_router.dart';
+import 'package:campeando_frontend/core/navigation/deep_link_handler.dart';
 import 'package:campeando_frontend/features/access_control/data/datasources/access_control_remote_datasource.dart';
 import 'package:campeando_frontend/features/access_control/data/repositories/access_control_repository_impl.dart';
 import 'package:campeando_frontend/features/access_control/domain/repositories/access_control_repository.dart';
@@ -44,6 +45,7 @@ class CampeandoApp extends StatefulWidget {
 
 class _CampeandoAppState extends State<CampeandoApp> {
   late final AppRouter _appRouter;
+  late final DeepLinkHandler _deepLinkHandler;
 
   // Infrastructure & Repositories
   late final ApiClient _apiClient;
@@ -111,6 +113,19 @@ class _CampeandoAppState extends State<CampeandoApp> {
     _paymentLinkSharingService = PaymentLinkSharingService();
 
     _appRouter = AppRouter(_authProvider);
+
+    // Escucha los deep links entrantes. Se inicializa tras el primer frame
+    // para garantizar que el router ya esté montado antes del primer `go`.
+    _deepLinkHandler = DeepLinkHandler(_appRouter.router, _authProvider);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _deepLinkHandler.init();
+    });
+  }
+
+  @override
+  void dispose() {
+    _deepLinkHandler.dispose();
+    super.dispose();
   }
 
   @override

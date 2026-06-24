@@ -147,6 +147,7 @@ class AppRouter {
             child: ApplicationDetailScreen(
               applicationId: appId,
               applicantName: application?.applicantName ?? 'Postulante',
+              receiptUrl: application?.receiptUrl,
             ),
           );
         },
@@ -174,34 +175,50 @@ class AppRouter {
       ),
     ],
     redirect: (context, state) {
-      if (authProvider.status == AuthStatus.initial) {
+      final status = authProvider.status;
+      if (status == AuthStatus.initial) {
         return null;
       }
 
       final path = state.uri.path;
+      final loc = state.uri.toString(); // path + query (preserva ?from=...)
+      final loggedIn = status == AuthStatus.authenticated;
+      final hasOrg = authProvider.organizationId != null;
       final isAuthPath = path == '/login' || path == '/register';
       final isPublicPath = path.startsWith('/events');
+      final isOrgPath =
+          path == '/organization-selector' || path == '/create-organization';
+      final from = state.uri.queryParameters['from'];
 
-      // 1. Allow everyone to access public routes or login/register
-      if (isAuthPath || isPublicPath) {
-        if (authProvider.status == AuthStatus.authenticated && isAuthPath) {
-          return '/';
-        }
-        return null;
+      // 1. No logueado: dejar pasar login/register y rutas públicas;
+      //    para cualquier ruta privada -> login recordando el destino.
+      //    Así, un deep link abierto sin sesión vuelve a la pantalla pedida
+      //    tras iniciar sesión (y no provoca un 401 al pegar al backend).
+      if (!loggedIn) {
+        if (isAuthPath || isPublicPath) return null;
+        return '/login?from=${Uri.encodeComponent(loc)}';
       }
 
-      // 2. If not logged in and trying to access private route, go to login
-      if (authProvider.status == AuthStatus.unauthenticated) {
-        return '/login';
+      // --- A partir de aquí el usuario está autenticado ---
+
+      // 2. Sin organización: forzar selección, pero arrastrando el destino
+      //    para no perder el deep link al pasar por el selector.
+      if (!hasOrg && !isOrgPath) {
+        final keep = (from != null && from.isNotEmpty)
+            ? from
+            : (isAuthPath ? null : Uri.encodeComponent(loc));
+        return keep != null
+            ? '/organization-selector?from=$keep'
+            : '/organization-selector';
       }
 
-      // 3. If logged in but no organization, force selection (except if already there)
-      if (authProvider.status == AuthStatus.authenticated) {
-        if (authProvider.organizationId == null &&
-            path != '/organization-selector' &&
-            path != '/create-organization') {
-          return '/organization-selector';
+      // 3. Ya con organización, si seguimos parados en login/register o en el
+      //    selector -> saltar al destino recordado (o al home).
+      if (hasOrg && (isAuthPath || isOrgPath)) {
+        if (from != null && from.isNotEmpty) {
+          return Uri.decodeComponent(from);
         }
+        return '/';
       }
 
       return null;

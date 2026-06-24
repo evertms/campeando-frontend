@@ -2,21 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/config.dart';
+import '../../../auth/presentation/auth_provider.dart';
 import '../providers/payment_validation_provider.dart';
 
 class ApplicationDetailScreen extends StatelessWidget {
   final String applicationId;
   final String applicantName;
 
+  /// URL absoluta del comprobante (MinIO/S3) provista por el backend, o null.
+  final String? receiptUrl;
+
   const ApplicationDetailScreen({
     super.key,
     required this.applicationId,
     required this.applicantName,
+    this.receiptUrl,
   });
-
-  // El comprobante se guarda en el backend como /receipts/{orderId}.png.
-  String get _receiptUrl => '$baseUrl/receipts/$applicationId.png';
 
   Future<void> _decide(BuildContext context, {required bool accept}) async {
     final provider = context.read<PaymentValidationProvider>();
@@ -30,7 +31,9 @@ class ApplicationDetailScreen extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            accept ? 'Solicitud aceptada. QR enviado por correo.' : 'Solicitud rechazada.',
+            accept
+                ? 'Solicitud aceptada. QR enviado por correo.'
+                : 'Solicitud rechazada.',
           ),
           backgroundColor: accept ? Colors.green : Colors.red,
         ),
@@ -46,7 +49,21 @@ class ApplicationDetailScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalle de Postulación')),
+      appBar: AppBar(
+        title: const Text('Detalle de Postulación'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            tooltip: 'Compartir comprobante',
+            onPressed: () =>
+                context.read<PaymentValidationProvider>().shareApplication(
+                  applicationId,
+                  applicantName: applicantName,
+                  tenantId: context.read<AuthProvider>().organizationId,
+                ),
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -69,17 +86,28 @@ class ApplicationDetailScreen extends StatelessWidget {
             const SizedBox(height: 16),
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: Image.network(
-                _receiptUrl,
-                width: double.infinity,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Container(
-                  height: 160,
-                  alignment: Alignment.center,
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  child: const Text('Sin comprobante adjunto'),
-                ),
-              ),
+              child: receiptUrl == null
+                  ? Container(
+                      height: 160,
+                      alignment: Alignment.center,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      child: const Text('Sin comprobante adjunto'),
+                    )
+                  : Image.network(
+                      receiptUrl!,
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        height: 160,
+                        alignment: Alignment.center,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHighest,
+                        child: const Text('Sin comprobante adjunto'),
+                      ),
+                    ),
             ),
             const SizedBox(height: 32),
             Consumer<PaymentValidationProvider>(
