@@ -53,7 +53,15 @@ class PaymentValidationProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> shareApplication(String applicationId) async {
-    await shareService.shareApplicationLink(applicationId);
+  Future<void> shareApplication(
+    String applicationId, {
+    String? applicantName,
+    String? tenantId,
+  }) async {
+    await shareService.shareApplicationLink(
+      applicationId,
+      applicantName: applicantName,
+      tenantId: tenantId,
+    );
   }
 }

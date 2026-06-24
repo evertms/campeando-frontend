@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Permite tráfico HTTP (cleartext) hacia los hosts de desarrollo del backend y MinIO.
+  Android 9+ bloquea cleartext por defecto; estas excepciones son SOLO para dev local.
+  Para dispositivo físico agregá aquí la IP LAN de tu PC, p. ej.:
+    <domain includeSubdomains="true">192.168.1.50</domain>
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        <!-- Agregá tu IP LAN para probar en dispositivo físico: -->
+        <!-- <domain includeSubdomains="true">192.168.1.50</domain> -->
+    </domain-config>
+</network-security-config>
