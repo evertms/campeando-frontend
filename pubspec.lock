@@ -124,10 +124,12 @@ packages:
   campeando_system_design:
     dependency: "direct main"
     description:
-      path: "/home/evert/Documents/u-projects/campeando_system_design"
-      relative: false
-    source: path
-    version: "0.1.0+1"
+      path: "."
+      ref: "v0.2.0"
+      resolved-ref: "9833c0c0c2c705448eae74c67e9a47dc5d00f330"
+      url: "https://github.com/evertms/campeando-system-design.git"
+    source: git
+    version: "0.2.0+1"
   characters:
     dependency: transitive
     description:
