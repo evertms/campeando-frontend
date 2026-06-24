@@ -25,3 +25,5 @@ Este proyecto sigue normas técnicas muy estrictas. Actúa como Software Archite
 ## 6. Control de Versiones
 - **Git Flow obligatorio**: Las ramas deben llamarse con prefijos `feat/`, `fix/`, `chore/`, etc.
 - **Commits convencionales**: Obligatorio usar Conventional Commits (ej. `feat:`, `fix:`, `chore:`).
+- **Merges siempre con `--no-ff`**: Al integrar una rama (especialmente hacia `develop`), usar SIEMPRE `git merge --no-ff` para generar un commit de merge explícito y preservar la rama de la feature en el grafo. ❌ **PROHIBIDO** el fast-forward al mergear hacia `develop`.
+  - Ejemplo: `git merge --no-ff feat/mi-feature`
