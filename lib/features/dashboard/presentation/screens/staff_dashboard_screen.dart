@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/dashboard_provider.dart';
@@ -59,43 +60,76 @@ class _StaffDashboardScreenState extends State<StaffDashboardScreen> {
             return const Center(child: Text('Sin datos de métricas.'));
           }
 
-          final available = metrics.totalCapacity - metrics.checkedInCount;
-          final availableText = available < 0 ? '0' : '$available';
+          final cards = [
+            MetricCardWidget(
+              icon: Icons.event_seat,
+              label: 'Capacidad total',
+              value: '${metrics.totalCapacity}',
+            ),
+            MetricCardWidget(
+              icon: Icons.how_to_reg,
+              label: 'Asistentes ingresados',
+              value: '${metrics.checkedInCount}',
+              color: Colors.green,
+            ),
+            MetricCardWidget(
+              icon: Icons.restaurant,
+              label: 'Raciones consumidas',
+              value: '${metrics.rationsConsumed}',
+              color: Colors.orange,
+            ),
+            MetricCardWidget(
+              icon: Icons.hourglass_bottom,
+              label: 'Cupos disponibles',
+              value: '${metrics.availableSpots}',
+              color: Colors.blueGrey,
+            ),
+          ];
 
           return RefreshIndicator(
             onRefresh: _refresh,
-            child: GridView.count(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.05,
-              children: [
-                MetricCardWidget(
-                  icon: Icons.event_seat,
-                  label: 'Capacidad total',
-                  value: '${metrics.totalCapacity}',
-                ),
-                MetricCardWidget(
-                  icon: Icons.how_to_reg,
-                  label: 'Asistentes ingresados',
-                  value: '${metrics.checkedInCount}',
-                  color: Colors.green,
-                ),
-                MetricCardWidget(
-                  icon: Icons.restaurant,
-                  label: 'Raciones consumidas',
-                  value: '${metrics.rationsConsumed}',
-                  color: Colors.orange,
-                ),
-                MetricCardWidget(
-                  icon: Icons.hourglass_bottom,
-                  label: 'Cupos disponibles',
-                  value: availableText,
-                  color: Colors.blueGrey,
-                ),
-              ],
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // En pantallas anchas (desktop/tablet) mostramos las 4 métricas
+                // en una sola fila; en móvil, una cuadrícula 2x2.
+                final isWide = constraints.maxWidth >= 700;
+                final crossAxisCount = isWide ? 4 : 2;
+                final childAspectRatio = isWide ? 1.25 : 1.05;
+
+                return SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 1100),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            GridView.count(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              crossAxisCount: crossAxisCount,
+                              mainAxisSpacing: 12,
+                              crossAxisSpacing: 12,
+                              childAspectRatio: childAspectRatio,
+                              children: cards,
+                            ),
+                            const SizedBox(height: 16),
+                            FilledButton.icon(
+                              onPressed: () => context.push(
+                                '/confirmed-participants/${widget.eventId}',
+                              ),
+                              icon: const Icon(Icons.groups),
+                              label: const Text('Participantes confirmados'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           );
         },
