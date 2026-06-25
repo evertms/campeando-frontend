@@ -5,7 +5,6 @@ import 'package:campeando_frontend/core/navigation/deep_link_handler.dart';
 import 'package:campeando_frontend/features/access_control/data/datasources/access_control_remote_datasource.dart';
 import 'package:campeando_frontend/features/access_control/data/repositories/access_control_repository_impl.dart';
 import 'package:campeando_frontend/features/access_control/domain/repositories/access_control_repository.dart';
-import 'package:campeando_frontend/features/auth/data/auth_repository_impl.dart';
 import 'package:campeando_frontend/features/auth/domain/repositories/auth_repository.dart';
 import 'package:campeando_frontend/features/auth/presentation/auth_provider.dart';
 import 'package:campeando_frontend/features/confirmed_participants/data/datasources/confirmed_participants_remote_datasource.dart';
@@ -40,7 +39,22 @@ import 'package:provider/provider.dart';
 class CampeandoApp extends StatefulWidget {
   final StorageService storageService;
 
-  const CampeandoApp({super.key, required this.storageService});
+  /// ApiClient ya construido en main() (con el hook de refresh-on-401 cableado)
+  /// y compartido por todos los repositorios.
+  final ApiClient apiClient;
+
+  /// AuthRepository y AuthProvider construidos e inicializados en main(), de
+  /// modo que la app nunca arranca en AuthStatus.initial.
+  final AuthRepository authRepository;
+  final AuthProvider authProvider;
+
+  const CampeandoApp({
+    super.key,
+    required this.storageService,
+    required this.apiClient,
+    required this.authRepository,
+    required this.authProvider,
+  });
 
   @override
   State<CampeandoApp> createState() => _CampeandoAppState();
@@ -71,7 +85,11 @@ class _CampeandoAppState extends State<CampeandoApp> {
   @override
   void initState() {
     super.initState();
-    _apiClient = ApiClient(storageService: widget.storageService);
+    // ApiClient, AuthRepository y AuthProvider vienen ya construidos desde
+    // main() (la sesión se resolvió antes de montar la UI).
+    _apiClient = widget.apiClient;
+    _authRepository = widget.authRepository;
+    _authProvider = widget.authProvider;
 
     final eventRemoteDatasource = EventRemoteDatasourceImpl(
       apiClient: _apiClient,
@@ -86,12 +104,7 @@ class _CampeandoAppState extends State<CampeandoApp> {
     _registrationRepository = RegistrationRepositoryImpl(
       remoteDatasource: registrationRemoteDatasource,
     );
-    _authRepository = AuthRepositoryImpl(apiClient: _apiClient);
     _organizationRepository = OrganizationRepositoryImpl(apiClient: _apiClient);
-    _authProvider = AuthProvider(
-      authRepository: _authRepository,
-      storageService: widget.storageService,
-    );
 
     // MVP feature wiring (Access Control, Pending Applications, Payments)
     _accessControlRepository = AccessControlRepositoryImpl(

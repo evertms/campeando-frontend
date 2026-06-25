@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../pending_applications/data/models/pending_application_model.dart';
 import '../../application/share_deep_link_service.dart';
 import '../../domain/repositories/payment_validation_repository.dart';
 
@@ -22,6 +23,43 @@ class PaymentValidationProvider extends ChangeNotifier {
 
   ApplicationDecision _decision = ApplicationDecision.none;
   ApplicationDecision get decision => _decision;
+
+  // --- Datos de la postulación (nombre + comprobante) ---
+  PendingApplicationModel? _application;
+  PendingApplicationModel? get application => _application;
+
+  bool _isLoadingApplication = false;
+  bool get isLoadingApplication => _isLoadingApplication;
+
+  String? _loadError;
+  String? get loadError => _loadError;
+
+  /// Carga inicial del detalle. Si ya tenemos el modelo (navegación interna que
+  /// pasó `extra`) lo usamos directo; si no (deep link), lo traemos por id.
+  Future<void> loadApplication(
+    String applicationId, {
+    PendingApplicationModel? initial,
+  }) async {
+    if (initial != null) {
+      _application = initial;
+      _loadError = null;
+      notifyListeners();
+      return;
+    }
+
+    _isLoadingApplication = true;
+    _loadError = null;
+    notifyListeners();
+
+    try {
+      _application = await repository.getApplication(applicationId);
+    } catch (e) {
+      _loadError = 'No se pudo cargar la postulación: $e';
+    } finally {
+      _isLoadingApplication = false;
+      notifyListeners();
+    }
+  }
 
   Future<bool> acceptApplication(String orderId) =>
       _decide(orderId, accept: true);

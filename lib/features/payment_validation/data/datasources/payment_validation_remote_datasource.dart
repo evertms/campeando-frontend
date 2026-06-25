@@ -1,9 +1,11 @@
 import '../../../../core/config.dart';
 import '../../../../core/data/api_client.dart';
+import '../../../pending_applications/data/models/pending_application_model.dart';
 
 abstract class PaymentValidationRemoteDatasource {
   Future<String> uploadReceipt(String applicationId, String base64Image);
   Future<void> updateOrderStatus(String orderId, String status);
+  Future<PendingApplicationModel> getApplication(String applicationId);
 }
 
 class PaymentValidationRemoteDatasourceImpl
@@ -11,6 +13,21 @@ class PaymentValidationRemoteDatasourceImpl
   final ApiClient apiClient;
 
   PaymentValidationRemoteDatasourceImpl({required this.apiClient});
+
+  @override
+  Future<PendingApplicationModel> getApplication(String applicationId) async {
+    // Endpoint público ([AllowAnonymous]); no depende de la sesión.
+    final response = await apiClient.get('/api/applications/$applicationId');
+    final json = Map<String, dynamic>.from(response as Map);
+
+    // El comprobante puede venir como ruta relativa; la resolvemos contra el
+    // host de la API para que Image.network la cargue (igual que uploadReceipt).
+    final receipt = json['receiptFileUrl'] as String?;
+    if (receipt != null && receipt.startsWith('/')) {
+      json['receiptFileUrl'] = '$baseUrl$receipt';
+    }
+    return PendingApplicationModel.fromJson(json);
+  }
 
   @override
   Future<String> uploadReceipt(String applicationId, String base64Image) async {
