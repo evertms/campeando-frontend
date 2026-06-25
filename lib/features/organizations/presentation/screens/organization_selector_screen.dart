@@ -102,9 +102,19 @@ class _OrganizationSelectorScreenState
   }
 
   void _selectOrg(String id) async {
-    // Al fijar la organización, AuthProvider notifica y el `redirect` del
-    // router decide el destino: el deep link recordado (?from=...) o el home.
-    // Por eso NO navegamos manualmente aquí.
+    // Recordamos el deep link pendiente (?from=...) antes del await para no
+    // usar el context a través de un gap asíncrono.
+    final from = GoRouterState.of(context).uri.queryParameters['from'];
     await context.read<AuthProvider>().selectOrganization(id);
+    if (!mounted) return;
+    // Navegamos explícitamente al destino recordado o al home. `go` reemplaza
+    // el stack, así que tanto si llegamos por selección forzada como si
+    // abrimos el selector para cambiar de organización terminamos con una sola
+    // pantalla de inicio (sin fugas de memoria).
+    if (from != null && from.isNotEmpty) {
+      context.go(Uri.decodeComponent(from));
+    } else {
+      context.go('/');
+    }
   }
 }

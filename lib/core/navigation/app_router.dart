@@ -248,9 +248,15 @@ class AppRouter {
             : '/organization-selector';
       }
 
-      // 3. Ya con organización, si seguimos parados en login/register o en el
-      //    selector -> saltar al destino recordado (o al home).
-      if (hasOrg && (isAuthPath || isOrgPath)) {
+      // 3. Ya con organización, si seguimos parados en login/register ->
+      //    saltar al destino recordado (o al home).
+      //    OJO: NO rebotamos /organization-selector ni /create-organization.
+      //    Un usuario con organización puede abrir el selector a propósito para
+      //    cambiarla; rebotarlo acá hacía que cada toque del botón de Settings
+      //    apilara otra pantalla "Mis Eventos" (crecimiento ilimitado del
+      //    stack). La navegación tras elegir organización la hace el propio
+      //    selector (OrganizationSelectorScreen._selectOrg).
+      if (hasOrg && isAuthPath) {
         if (from != null && from.isNotEmpty) {
           return Uri.decodeComponent(from);
         }
