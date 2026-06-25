@@ -17,27 +17,39 @@ class AuthProvider extends ChangeNotifier {
   String? get token => _token;
   String? get organizationId => _organizationId;
 
-  AuthProvider({
-    required this._authRepository,
-    required this._storageService,
-  }) {
+  AuthProvider({required this._authRepository, required this._storageService}) {
     _init();
   }
 
   Future<void> _init() async {
-    _token = await _storageService.getToken();
-    final rawOrgId = await _storageService.getTenant();
-    _organizationId = _cleanId(rawOrgId);
+    try {
+      _token = await _storageService.getToken();
+      final rawOrgId = await _storageService.getTenant();
+      _organizationId = _cleanId(rawOrgId);
 
-    if (_token != null && !JwtDecoder.isExpired(_token!)) {
-      _status = AuthStatus.authenticated;
-    } else {
-      _status = AuthStatus.unauthenticated;
-      _token = null;
-      _organizationId = null;
-      await _storageService.clear();
+      if (_token != null && !JwtDecoder.isExpired(_token!)) {
+        _status = AuthStatus.authenticated;
+      } else {
+        await _resetSession();
+      }
+    } catch (_) {
+      // Un token corrupto, malformado o sin campo `exp` hace que
+      // JwtDecoder lance una excepción. Si la dejamos escapar, el estado
+      // se queda en AuthStatus.initial y la app queda en "cargando" para
+      // siempre al reabrir. Lo tratamos como sesión inválida.
+      await _resetSession();
+    } finally {
+      // Garantiza que SIEMPRE salgamos de AuthStatus.initial y que el
+      // router (refreshListenable) reevalúe el redirect.
+      notifyListeners();
     }
-    notifyListeners();
+  }
+
+  Future<void> _resetSession() async {
+    _status = AuthStatus.unauthenticated;
+    _token = null;
+    _organizationId = null;
+    await _storageService.clear();
   }
 
   String? _cleanId(String? id) {
