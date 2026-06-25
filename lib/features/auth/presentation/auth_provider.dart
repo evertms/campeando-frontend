@@ -17,11 +17,12 @@ class AuthProvider extends ChangeNotifier {
   String? get token => _token;
   String? get organizationId => _organizationId;
 
-  AuthProvider({required this._authRepository, required this._storageService}) {
-    _init();
-  }
+  AuthProvider({required this._authRepository, required this._storageService});
 
-  Future<void> _init() async {
+  /// Resuelve la sesión al arrancar la app. Se invoca desde `main()` con
+  /// `await` ANTES de construir la UI, de modo que el router nunca se monta
+  /// en `AuthStatus.initial` (causa del spinner infinito al reabrir).
+  Future<void> initialize() async {
     try {
       _token = await _storageService.getToken();
       final rawOrgId = await _storageService.getTenant();
@@ -29,20 +30,59 @@ class AuthProvider extends ChangeNotifier {
 
       if (_token != null && !JwtDecoder.isExpired(_token!)) {
         _status = AuthStatus.authenticated;
+      } else if (await _attemptRefresh()) {
+        // El access token venció pero pudimos renovarlo con el refresh token:
+        // la sesión persiste sin pedir login de nuevo.
+        _status = AuthStatus.authenticated;
       } else {
         await _resetSession();
       }
     } catch (_) {
-      // Un token corrupto, malformado o sin campo `exp` hace que
-      // JwtDecoder lance una excepción. Si la dejamos escapar, el estado
-      // se queda en AuthStatus.initial y la app queda en "cargando" para
-      // siempre al reabrir. Lo tratamos como sesión inválida.
+      // Un token corrupto/malformado hace que JwtDecoder lance. Si lo dejamos
+      // escapar, el estado queda en AuthStatus.initial y la app se queda
+      // "cargando" para siempre. Lo tratamos como sesión inválida.
       await _resetSession();
     } finally {
-      // Garantiza que SIEMPRE salgamos de AuthStatus.initial y que el
-      // router (refreshListenable) reevalúe el redirect.
+      // Garantiza que SIEMPRE salgamos de AuthStatus.initial.
+      if (_status == AuthStatus.initial) {
+        _status = AuthStatus.unauthenticated;
+      }
       notifyListeners();
     }
+  }
+
+  /// Intenta renovar el access token con el refresh token almacenado.
+  /// Devuelve `true` si lo logró (token nuevo persistido), `false` si no.
+  /// Acota la espera de red para no demorar el arranque indefinidamente.
+  Future<bool> _attemptRefresh() async {
+    try {
+      final refreshToken = await _storageService.getRefreshToken();
+      if (refreshToken == null || refreshToken.isEmpty) return false;
+
+      final tokens = await _authRepository
+          .refresh(refreshToken)
+          .timeout(const Duration(seconds: 8));
+
+      _token = tokens.accessToken;
+      await _storageService.setToken(_token);
+      if (tokens.refreshToken != null) {
+        await _storageService.setRefreshToken(tokens.refreshToken);
+      }
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Hook que [ApiClient] invoca ante un 401: intenta renovar la sesión; si no
+  /// puede, cierra la sesión para que el router lleve a login.
+  Future<bool> handleUnauthorized() async {
+    final renewed = await _attemptRefresh();
+    if (!renewed) {
+      await _resetSession();
+      notifyListeners();
+    }
+    return renewed;
   }
 
   Future<void> _resetSession() async {
@@ -62,8 +102,10 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _token = await _authRepository.login(email, password);
+      final tokens = await _authRepository.login(email, password);
+      _token = tokens.accessToken;
       await _storageService.setToken(_token);
+      await _storageService.setRefreshToken(tokens.refreshToken);
 
       // Extract organizationId (tenant_id) from JWT if available
       final decodedToken = JwtDecoder.decode(_token!);

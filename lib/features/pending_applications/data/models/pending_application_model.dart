@@ -19,7 +19,10 @@ class PendingApplicationModel {
     return PendingApplicationModel(
       id: json['id'] as String,
       applicantName: json['applicantName'] as String,
-      paymentStatus: json['paymentStatus'] as String,
+      // El listado usa `paymentStatus`; el detalle (GET /api/applications/{id})
+      // usa `status`. Aceptamos ambos para reutilizar el modelo.
+      paymentStatus:
+          (json['paymentStatus'] ?? json['status'] ?? '') as String,
       appliedAt: DateTime.parse(json['appliedAt'] as String),
       receiptUrl: json['receiptFileUrl'] as String?,
     );

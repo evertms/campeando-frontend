@@ -6,6 +6,7 @@ class StorageService {
   StorageService(this._preferences);
 
   static const String _tokenKey = 'campeando_auth_token';
+  static const String _refreshTokenKey = 'campeando_refresh_token';
   static const String _tenantKey = 'campeando_tenant_id';
 
   Future<String?> getToken() async {
@@ -17,6 +18,18 @@ class StorageService {
       await _preferences.remove(_tokenKey);
     } else {
       await _preferences.setString(_tokenKey, token);
+    }
+  }
+
+  Future<String?> getRefreshToken() async {
+    return _preferences.getString(_refreshTokenKey);
+  }
+
+  Future<void> setRefreshToken(String? refreshToken) async {
+    if (refreshToken == null) {
+      await _preferences.remove(_refreshTokenKey);
+    } else {
+      await _preferences.setString(_refreshTokenKey, refreshToken);
     }
   }
 
@@ -34,6 +47,7 @@ class StorageService {
 
   Future<void> clear() async {
     await _preferences.remove(_tokenKey);
+    await _preferences.remove(_refreshTokenKey);
     await _preferences.remove(_tenantKey);
   }
 }

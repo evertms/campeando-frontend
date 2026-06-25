@@ -41,6 +41,26 @@ class AppRouter {
   late final router = GoRouter(
     initialLocation: '/',
     refreshListenable: authProvider,
+    // Red de seguridad: cualquier ruta no reconocida cae acá en vez de la
+    // pantalla de error cruda de go_router, con una salida clara a Home.
+    errorBuilder: (context, state) => Scaffold(
+      appBar: AppBar(title: const Text('Pantalla no encontrada')),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline, size: 48),
+            const SizedBox(height: 12),
+            const Text('No pudimos abrir esta pantalla.'),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: () => context.go('/'),
+              child: const Text('Volver al inicio'),
+            ),
+          ],
+        ),
+      ),
+    ),
     routes: [
       GoRoute(
         path: '/',
@@ -161,8 +181,9 @@ class AppRouter {
             ),
             child: ApplicationDetailScreen(
               applicationId: appId,
-              applicantName: application?.applicantName ?? 'Postulante',
-              receiptUrl: application?.receiptUrl,
+              // Por deep link `extra` es null y la pantalla trae los datos por
+              // id; por navegación interna llega el modelo y se usa directo.
+              initialApplication: application,
             ),
           );
         },

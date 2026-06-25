@@ -7,16 +7,34 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({required this.apiClient});
 
   @override
-  Future<String> login(String email, String password) async {
+  Future<AuthTokens> login(String email, String password) async {
     final response = await apiClient.post(
       '/api/identity/login',
       body: {'email': email, 'password': password},
     );
+    return _tokensFrom(response);
+  }
 
-    // Assuming the response is { "accessToken": "...", "refreshToken": "..." }
-    // Or just the token string depending on API. OpenAPI says '200' description OK but not schema for response.
-    // I'll assume standard { "accessToken": "..." } for now.
-    return response['accessToken'] as String;
+  @override
+  Future<AuthTokens> refresh(String refreshToken) async {
+    // `allowRefresh: false` evita que un 401 del propio refresh dispare otro
+    // intento de refresh (recursión).
+    // El backend espera la propiedad `token` (ver RefreshTokenCommand.cs) y
+    // devuelve { accessToken, refreshToken } (RefreshTokenResponse.cs).
+    final response = await apiClient.post(
+      '/api/identity/refresh',
+      body: {'token': refreshToken},
+      allowRefresh: false,
+    );
+    return _tokensFrom(response);
+  }
+
+  AuthTokens _tokensFrom(dynamic response) {
+    final map = response as Map<String, dynamic>;
+    return AuthTokens(
+      accessToken: map['accessToken'] as String,
+      refreshToken: map['refreshToken'] as String?,
+    );
   }
 
   @override

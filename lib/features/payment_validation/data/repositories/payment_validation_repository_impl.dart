@@ -1,3 +1,4 @@
+import '../../../pending_applications/data/models/pending_application_model.dart';
 import '../../domain/repositories/payment_validation_repository.dart';
 import '../datasources/payment_validation_remote_datasource.dart';
 
@@ -19,5 +20,10 @@ class PaymentValidationRepositoryImpl implements PaymentValidationRepository {
   @override
   Future<void> rejectApplication(String orderId) {
     return remoteDatasource.updateOrderStatus(orderId, 'Rejected');
+  }
+
+  @override
+  Future<PendingApplicationModel> getApplication(String applicationId) {
+    return remoteDatasource.getApplication(applicationId);
   }
 }

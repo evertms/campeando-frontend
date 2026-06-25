@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -8,6 +9,14 @@ import 'package:http/http.dart' as http;
 class ApiClient {
   final http.Client _httpClient;
   final StorageService? _storageService;
+
+  /// Tiempo máximo por request. Evita spinners eternos cuando la red se cuelga.
+  static const Duration _timeout = Duration(seconds: 15);
+
+  /// Hook invocado ante un 401. Debe intentar renovar la sesión y devolver
+  /// `true` si lo logró (conviene reintentar la request) o `false` si no
+  /// (se fuerza el logout aguas arriba). Lo cablea [AuthProvider].
+  Future<bool> Function()? onUnauthorized;
 
   ApiClient({http.Client? httpClient, this._storageService})
     : _httpClient = httpClient ?? http.Client();
@@ -34,50 +43,68 @@ class ApiClient {
     return headers;
   }
 
-  Future<dynamic> get(String path) async {
-    final uri = Uri.parse('$baseUrl$path');
-    try {
-      final headers = await _getHeaders();
-      final response = await _httpClient.get(uri, headers: headers);
-      return _handleResponse(response);
-    } on SocketException {
-      throw Exception('No Internet connection');
-    }
-  }
+  Future<dynamic> get(String path) => _request('GET', path);
 
   Future<dynamic> post(
     String path, {
     required Map<String, dynamic> body,
-  }) async {
-    final uri = Uri.parse('$baseUrl$path');
-    try {
-      final headers = await _getHeaders();
-      final response = await _httpClient.post(
-        uri,
-        headers: headers,
-        body: json.encode(body),
-      );
-      return _handleResponse(response);
-    } on SocketException {
-      throw Exception('No Internet connection');
-    }
-  }
+    bool allowRefresh = true,
+  }) => _request('POST', path, body: body, allowRefresh: allowRefresh);
 
   Future<dynamic> patch(
     String path, {
     required Map<String, dynamic> body,
+    bool allowRefresh = true,
+  }) => _request('PATCH', path, body: body, allowRefresh: allowRefresh);
+
+  Future<dynamic> _request(
+    String method,
+    String path, {
+    Map<String, dynamic>? body,
+    bool allowRefresh = true,
   }) async {
     final uri = Uri.parse('$baseUrl$path');
     try {
-      final headers = await _getHeaders();
-      final response = await _httpClient.patch(
-        uri,
-        headers: headers,
-        body: json.encode(body),
-      );
+      var headers = await _getHeaders();
+      var response = await _dispatch(method, uri, headers, body);
+
+      // Ante un 401, intentamos renovar la sesión una sola vez y reintentar.
+      if (response.statusCode == 401 &&
+          allowRefresh &&
+          onUnauthorized != null) {
+        final renewed = await onUnauthorized!.call();
+        if (renewed) {
+          headers = await _getHeaders(); // ya con el token nuevo
+          response = await _dispatch(method, uri, headers, body);
+        }
+      }
+
       return _handleResponse(response);
     } on SocketException {
       throw Exception('No Internet connection');
+    } on TimeoutException {
+      throw Exception('La conexión tardó demasiado. Intentá de nuevo.');
+    }
+  }
+
+  Future<http.Response> _dispatch(
+    String method,
+    Uri uri,
+    Map<String, String> headers,
+    Map<String, dynamic>? body,
+  ) {
+    switch (method) {
+      case 'POST':
+        return _httpClient
+            .post(uri, headers: headers, body: json.encode(body))
+            .timeout(_timeout);
+      case 'PATCH':
+        return _httpClient
+            .patch(uri, headers: headers, body: json.encode(body))
+            .timeout(_timeout);
+      case 'GET':
+      default:
+        return _httpClient.get(uri, headers: headers).timeout(_timeout);
     }
   }
 

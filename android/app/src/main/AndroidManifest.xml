@@ -33,6 +33,16 @@
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"
               />
+            <!-- Deshabilita el manejo automático de deep links de Flutter para
+                 que el único manejador sea app_links/DeepLinkHandler. Si se deja
+                 habilitado, go_router también recibe el link de cold-start vía
+                 plataforma e intenta casar `campeando://application/<id>` contra
+                 sus rutas; al no matchear muestra la pantalla de error. Eso
+                 competía con DeepLinkHandler y causaba el "no existe tal
+                 pantalla" intermitente. -->
+            <meta-data
+              android:name="flutter_deeplinking_enabled"
+              android:value="false" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
